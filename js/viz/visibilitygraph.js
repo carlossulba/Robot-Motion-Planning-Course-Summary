@@ -181,7 +181,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.visibilitygraph = {
     title: "Visibility Graph",
-    badge: "§5.1 / book §5.1",
+    badge: "§6.1 / book §5.1",
     subtitle: "Nodes = start, goal, and every obstacle vertex. Edges connect any two nodes with a clear line of sight. Shortest path via Dijkstra.",
     width: 480, height: 320,
     legend: [

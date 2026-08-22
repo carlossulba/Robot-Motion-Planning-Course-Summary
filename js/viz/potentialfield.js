@@ -138,7 +138,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.potentialfield = {
     title: "Attractive/Repulsive Potential Field",
-    badge: "§4.3 / book §4.1",
+    badge: "§4.1 / book §4.1",
     subtitle: "Gradient descent on U = U_att + U_rep. Unlike a navigation function, this field can (and sometimes does) trap the robot in a local minimum.",
     width: 560, height: 360,
     legend: [

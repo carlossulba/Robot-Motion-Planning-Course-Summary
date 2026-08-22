@@ -163,7 +163,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.gvd = {
     title: "Generalized Voronoi Diagram (roadmap)",
-    badge: "§5.2 / book §5.2",
+    badge: "§6.2 / book §5.2",
     subtitle: "Extracted from the Brushfire distance transform, then used as a roadmap: depart start, search the skeleton, arrive at goal.",
     width: 480, height: 320,
     legend: [

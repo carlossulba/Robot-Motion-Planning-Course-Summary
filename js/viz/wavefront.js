@@ -122,7 +122,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.wavefront = {
     title: "Wave-Front Planner",
-    badge: "§4.2 / book §4.5",
+    badge: "§5.2 / book §4.5",
     subtitle: "BFS numbering outward from the goal; any start's number gives the path length, found by walking downhill.",
     width: 480, height: 320,
     legend: [

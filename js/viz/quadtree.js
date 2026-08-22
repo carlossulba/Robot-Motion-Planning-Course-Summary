@@ -164,7 +164,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.quadtree = {
     title: "Quadtree Decomposition",
-    badge: "§5.4 / book §6.2",
+    badge: "§7.4 / book §6.2",
     subtitle: "Recursively split a mixed region into 4 quadrants until each leaf is uniformly free or uniformly occupied — an approximate decomposition.",
     width: 560, height: 360,
     legend: [

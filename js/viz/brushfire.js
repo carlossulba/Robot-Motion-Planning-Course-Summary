@@ -110,7 +110,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.brushfire = {
     title: "Brushfire",
-    badge: "§4.1 / book §4.3.2",
+    badge: "§5.1 / book §4.3.2",
     subtitle: "A distance transform computed by multi-source BFS on a grid — the standard way to build a GVD from raster data.",
     width: 480, height: 320,
     legend: [

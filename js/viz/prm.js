@@ -111,7 +111,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.prm = {
     title: "PRM (Probabilistic Roadmap)",
-    badge: "§6.1.1 / book §7.1",
+    badge: "§8.3.1 / book §7.1",
     subtitle: "Sample free milestones, connect each to its k nearest neighbors, then search the resulting graph.",
     width: 560, height: 360,
     legend: [

@@ -182,7 +182,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.rrtstar = {
     title: "RRT*",
-    badge: "§6.4.2 / book §7.2.2",
+    badge: "§8.5.3 / book §7.2.2",
     subtitle: "RRT plus rewiring: every new node picks the lowest-cost nearby parent, and can steal nearby nodes from the tree if that shortens their path.",
     width: 560, height: 360,
     legend: [

@@ -183,7 +183,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.trapezoidal = {
     title: "Trapezoidal Decomposition",
-    badge: "§5.2.1 / book §6.1",
+    badge: "§7.1 / book §6.1",
     subtitle: "A vertical line is extended from every obstacle vertex, slicing free space into trapezoids. Path = adjacency-graph search + centroid/midpoint connectors.",
     width: 560, height: 360,
     legend: [

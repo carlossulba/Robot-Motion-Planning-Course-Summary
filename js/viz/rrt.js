@@ -121,7 +121,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.rrt = {
     title: "RRT (Rapidly-Exploring Random Tree)",
-    badge: "§6.4 / book §7.2.2",
+    badge: "§8.5.1 / book §7.2.2",
     subtitle: "Grow a tree from q_start: sample a point, extend from the nearest tree node by a fixed step, keep it if collision-free.",
     width: 560, height: 360,
     legend: [

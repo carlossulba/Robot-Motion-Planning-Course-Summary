@@ -185,7 +185,7 @@
   window.RMP.vizDefs = window.RMP.vizDefs || {};
   window.RMP.vizDefs.boustrophedon = {
     title: "Boustrophedon (Morse) Decomposition",
-    badge: "§5.2.2 / book §6.2",
+    badge: "§7.2 / book §6.2",
     subtitle: "A slab boundary is only placed where the number of free-space intervals actually changes — far coarser than trapezoidal decomposition.",
     width: 560, height: 360,
     legend: [
