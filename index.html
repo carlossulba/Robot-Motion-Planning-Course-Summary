@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Motion Planning — Interactive Demos</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="index.html">Motion<span>Planning</span></a>
+    <nav class="topnav">
+      <a href="#bug-algorithms">Bug Algorithms</a>
+      <a href="#potential-functions">Potential Functions</a>
+      <a href="#grid-based-planners">Grid-Based Planners</a>
+      <a href="#roadmaps">Roadmaps</a>
+      <a href="#cell-decompositions">Cell Decompositions</a>
+      <a href="#sampling-based">Sampling-Based</a>
+    </nav>
+    <button class="theme-toggle" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<main class="page page-wide">
+  <div class="kicker">TU Munich · Robot Motion Planning</div>
+  <h1>Interactive demos</h1>
+  <p class="lede">Companion demos for the course summary PDF — every algorithm's visualization, one per chapter,
+  nothing else. Jump straight to a chapter from the nav above, or link directly to
+  <code>index.html#chapter-id</code>.</p>
+
+  <section id="bug-algorithms">
+    <h2>3 &middot; Bug Algorithms</h2>
+    <div id="viz-bug1"></div>
+    <div id="viz-bug2"></div>
+    <div id="viz-tangentbug"></div>
+  </section>
+
+  <section id="potential-functions">
+    <h2>4 &middot; Potential Functions</h2>
+    <div id="viz-potentialfield"></div>
+  </section>
+
+  <section id="grid-based-planners">
+    <h2>4 &middot; Grid-Based Planners</h2>
+    <div id="viz-brushfire"></div>
+    <div id="viz-wavefront"></div>
+  </section>
+
+  <section id="roadmaps">
+    <h2>5 &middot; Roadmaps</h2>
+    <div id="viz-visibilitygraph"></div>
+    <div id="viz-gvd"></div>
+  </section>
+
+  <section id="cell-decompositions">
+    <h2>6 &middot; Cell Decompositions</h2>
+    <div id="viz-trapezoidal"></div>
+    <div id="viz-boustrophedon"></div>
+    <div id="viz-quadtree"></div>
+  </section>
+
+  <section id="sampling-based">
+    <h2>7 &middot; Sampling-Based Algorithms</h2>
+    <div id="viz-prm"></div>
+    <div id="viz-rrt"></div>
+    <div id="viz-rrtstar"></div>
+
+    <section id="other-sampling-strategies">
+      <h3>Other sampling strategies</h3>
+      <div id="viz-gaussiansampler"></div>
+      <div id="viz-bridgetest"></div>
+      <div id="viz-gvdretraction"></div>
+      <div id="viz-visibilitysampling"></div>
+    </section>
+  </section>
+
+</main>
+
+<footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
+
+<script src="js/common.js"></script>
+<script src="js/viz/viz-core.js"></script>
+<script src="js/viz/world.js"></script>
+<script src="js/viz/bug1.js"></script>
+<script src="js/viz/bug2.js"></script>
+<script src="js/viz/tangentbug.js"></script>
+<script src="js/viz/potentialfield.js"></script>
+<script src="js/viz/brushfire.js"></script>
+<script src="js/viz/wavefront.js"></script>
+<script src="js/viz/visibilitygraph.js"></script>
+<script src="js/viz/gvd.js"></script>
+<script src="js/viz/trapezoidal.js"></script>
+<script src="js/viz/boustrophedon.js"></script>
+<script src="js/viz/quadtree.js"></script>
+<script src="js/viz/prm.js"></script>
+<script src="js/viz/rrt.js"></script>
+<script src="js/viz/rrtstar.js"></script>
+<script src="js/viz/gaussiansampler.js"></script>
+<script src="js/viz/bridgetest.js"></script>
+<script src="js/viz/gvdretraction.js"></script>
+<script src="js/viz/visibilitysampling.js"></script>
+<script>
+  RMP.mountViz(document.getElementById("viz-bug1"), RMP.vizDefs.bug1);
+  RMP.mountViz(document.getElementById("viz-bug2"), RMP.vizDefs.bug2);
+  RMP.mountViz(document.getElementById("viz-tangentbug"), RMP.vizDefs.tangentbug);
+
+  RMP.mountViz(document.getElementById("viz-potentialfield"), RMP.vizDefs.potentialfield);
+
+  RMP.mountViz(document.getElementById("viz-brushfire"), RMP.vizDefs.brushfire);
+  RMP.mountViz(document.getElementById("viz-wavefront"), RMP.vizDefs.wavefront);
+
+  RMP.mountViz(document.getElementById("viz-visibilitygraph"), RMP.vizDefs.visibilitygraph);
+  RMP.mountViz(document.getElementById("viz-gvd"), RMP.vizDefs.gvd);
+
+  RMP.mountViz(document.getElementById("viz-trapezoidal"), RMP.vizDefs.trapezoidal);
+  RMP.mountViz(document.getElementById("viz-boustrophedon"), RMP.vizDefs.boustrophedon);
+  RMP.mountViz(document.getElementById("viz-quadtree"), RMP.vizDefs.quadtree);
+
+  RMP.mountViz(document.getElementById("viz-prm"), RMP.vizDefs.prm);
+  RMP.mountViz(document.getElementById("viz-rrt"), RMP.vizDefs.rrt);
+  RMP.mountViz(document.getElementById("viz-rrtstar"), RMP.vizDefs.rrtstar);
+
+  RMP.mountViz(document.getElementById("viz-gaussiansampler"), RMP.vizDefs.gaussiansampler);
+  RMP.mountViz(document.getElementById("viz-bridgetest"), RMP.vizDefs.bridgetest);
+  RMP.mountViz(document.getElementById("viz-gvdretraction"), RMP.vizDefs.gvdretraction);
+  RMP.mountViz(document.getElementById("viz-visibilitysampling"), RMP.vizDefs.visibilitysampling);
+</script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+/* Tangent Bug visualization: finite-range radial sensor, heads toward the
+   sensed boundary point that minimizes heuristic distance dist(robot,p)+dist(p,goal),
+   and leaves boundary-following as soon as a better sensed "reach" point beats
+   the best distance-to-goal seen so far while following ("d_reach < d_followed"). */
+(function () {
+  "use strict";
+  const { makeBugWorld } = window.RMP;
+  const { traceObstacleBoundary } = window.RMP.geom;
+
+  const RANGE = 95, N_RAYS = 36, RAY_STEP = 3;
+
+  function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+  function norm(a, b) { const d = dist(a, b) || 1; return { x: (b.x - a.x) / d, y: (b.y - a.y) / d }; }
+
+  function lineOfSightClear(world, a, b) {
+    const d = dist(a, b);
+    if (d < 1e-6) return true;
+    const steps = Math.ceil(d / 3);
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      if (!world.isFree(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)) return false;
+    }
+    return true;
+  }
+
+  // One point per ray: the obstacle it hits, or the point at full sensor
+  // range if that direction is clear. Range-limited points matter just as
+  // much as hit points -- they're what let the robot "see past" an
+  // isolated obstacle into open space toward the goal.
+  function sensePoints(world, pos) {
+    const pts = [];
+    for (let k = 0; k < N_RAYS; k++) {
+      const ang = (k / N_RAYS) * Math.PI * 2;
+      const dx = Math.cos(ang), dy = Math.sin(ang);
+      let hitR = null;
+      for (let r = RAY_STEP; r <= RANGE; r += RAY_STEP) {
+        const x = pos.x + dx * r, y = pos.y + dy * r;
+        if (!world.isFree(x, y)) { hitR = r - RAY_STEP * 0.4; break; }
+      }
+      const r = hitR === null ? RANGE : hitR;
+      pts.push({ x: pos.x + dx * r, y: pos.y + dy * r, blocked: hitR !== null });
+    }
+    return pts;
+  }
+
+  function bestHeuristicPoint(pts, from, goal) {
+    let best = null, bestH = Infinity;
+    for (const p of pts) {
+      const h = dist(from, p) + dist(p, goal);
+      if (h < bestH) { bestH = h; best = p; }
+    }
+    return { best, bestH };
+  }
+
+  function computeTangentBug(world) {
+    const STEP = 4, EPS = 3;
+    const events = [{ x: world.start.x, y: world.start.y, phase: "start", rays: [], note: "Start at q<sub>start</sub>, equipped with a finite-range radial sensor (dashed circle)." }];
+    let pos = { x: world.start.x, y: world.start.y };
+    let guard = 0;
+
+    while (guard++ < 5000) {
+      const distG = dist(pos, world.goal);
+      if (distG < STEP * 1.2) {
+        events.push({ x: world.goal.x, y: world.goal.y, phase: "reached", rays: [], note: "Reached q<sub>goal</sub> — path complete." });
+        return { events, success: true };
+      }
+      const losEnd = distG <= RANGE ? world.goal
+        : { x: pos.x + (world.goal.x - pos.x) / distG * RANGE, y: pos.y + (world.goal.y - pos.y) / distG * RANGE };
+      const pts = sensePoints(world, pos);
+
+      if (lineOfSightClear(world, pos, losEnd)) {
+        const dir = norm(pos, world.goal);
+        const next = { x: pos.x + dir.x * STEP, y: pos.y + dir.y * STEP };
+        if (world.isFree(next.x, next.y)) {
+          pos = next;
+          events.push({ x: pos.x, y: pos.y, phase: "to_goal", rays: pts, note: "Goal side clear within sensor range — heading straight for q<sub>goal</sub>." });
+          continue;
+        }
+      }
+
+      // blocked within range: steer toward the sensed point minimizing dist(robot,p)+dist(p,goal)
+      const { best } = bestHeuristicPoint(pts, pos, world.goal);
+      const target = best || world.goal;
+      const dir = norm(pos, target);
+      const next = { x: pos.x + dir.x * STEP, y: pos.y + dir.y * STEP };
+      if (world.isFree(next.x, next.y)) {
+        pos = next;
+        events.push({ x: pos.x, y: pos.y, phase: "tangent", rays: pts, note: "Obstacle sensed — heading tangentially toward the sensed point that minimizes heuristic distance to goal." });
+        continue;
+      }
+
+      // collision -> enter boundary-following
+      const qH = { x: pos.x, y: pos.y };
+      const obs = world.nearestObstacle(next.x, next.y);
+      events.push({ x: qH.x, y: qH.y, phase: "hit", rays: pts, note: "Reached the obstacle — begin boundary-following, continuously re-sensing." });
+      if (!obs) { events.push({ x: qH.x, y: qH.y, phase: "stuck", rays: [], note: "No obstacle found (numerical edge case) — stopping." }); return { events, success: false }; }
+
+      const boundary = traceObstacleBoundary(obs, qH, STEP, EPS, Infinity);
+      let dFollowedMin = dist(qH, world.goal);
+      let left = false;
+      for (let i = 1; i < boundary.length; i++) {
+        const p = boundary[i];
+        const pts2 = sensePoints(world, p);
+        events.push({ x: p.x, y: p.y, phase: "follow", rays: pts2, note: "Following the boundary; comparing d<sub>reach</sub> (best sensed shortcut) to d<sub>followed</sub> (closest point seen so far)." });
+        let dReach = Infinity;
+        for (const q of pts2) dReach = Math.min(dReach, dist(p, q) + dist(q, world.goal));
+        if (dist(p, world.goal) <= RANGE && lineOfSightClear(world, p, world.goal)) dReach = Math.min(dReach, dist(p, world.goal));
+        if (dReach < dFollowedMin - 2) {
+          pos = { x: p.x, y: p.y };
+          events.push({ x: pos.x, y: pos.y, phase: "leave", rays: pts2, note: "d<sub>reach</sub> &lt; d<sub>followed</sub> — a shortcut is now visible. Leave the boundary." });
+          left = true;
+          break;
+        }
+        // update AFTER comparing, so d_followed reflects prior history, not
+        // the current point itself (else direct line-of-sight can only ever
+        // tie d_followed, never beat it, and the leave condition never fires)
+        dFollowedMin = Math.min(dFollowedMin, dist(p, world.goal));
+      }
+      if (!left) {
+        events.push({ x: pos.x, y: pos.y, phase: "stuck", rays: [], note: "Circled the whole obstacle without ever sensing a shortcut — no path exists." });
+        return { events, success: false };
+      }
+    }
+    events.push({ x: pos.x, y: pos.y, phase: "stuck", rays: [], note: "Iteration limit reached." });
+    return { events, success: false };
+  }
+
+  function pathLength(events) {
+    let L = 0;
+    for (let i = 1; i < events.length; i++) L += dist(events[i - 1], events[i]);
+    return L;
+  }
+
+  const PHASE_COLOR = {
+    start: "#2b6cb0", to_goal: "#2b6cb0", tangent: "#6a4fb0", hit: "#c23b3b",
+    follow: "#b7532c", leave: "#2f8f5b", reached: "#2f8f5b", stuck: "#c23b3b",
+  };
+
+  function draw(ctx, world, events, idx) {
+    world.draw(ctx);
+    const cur = events[idx];
+
+    // sensor range + rays
+    ctx.save();
+    ctx.strokeStyle = "rgba(111,168,220,0.55)";
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.arc(cur.x, cur.y, RANGE, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(111,168,220,0.4)";
+    (cur.rays || []).filter((p) => p.blocked).forEach((p) => {
+      ctx.beginPath();
+      ctx.moveTo(cur.x, cur.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    });
+    ctx.restore();
+
+    ctx.save();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = "#8892a0";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(world.start.x, world.start.y);
+    ctx.lineTo(world.goal.x, world.goal.y);
+    ctx.stroke();
+    ctx.restore();
+
+    for (let i = 1; i <= idx; i++) {
+      ctx.beginPath();
+      ctx.strokeStyle = PHASE_COLOR[events[i].phase] || "#2b6cb0";
+      ctx.lineWidth = 2.4;
+      ctx.moveTo(events[i - 1].x, events[i - 1].y);
+      ctx.lineTo(events[i].x, events[i].y);
+      ctx.stroke();
+    }
+
+    world.drawMarker(ctx, world.start.x, world.start.y, "#2b6cb0", "start");
+    world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
+
+    ctx.save();
+    ctx.fillStyle = PHASE_COLOR[cur.phase] || "#2b6cb0";
+    ctx.beginPath();
+    ctx.arc(cur.x, cur.y, 5.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function makeSim({ rng, width, height }) {
+    const world = makeBugWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
+    const { events, success } = computeTangentBug(world);
+    let idx = 0;
+    return {
+      draw(ctx) { draw(ctx, world, events, idx); },
+      step() {
+        idx = Math.min(idx + 1, events.length - 1);
+        const done = idx >= events.length - 1;
+        let note = events[idx].note;
+        if (done) {
+          const L = pathLength(events.slice(0, idx + 1));
+          const d0 = dist(world.start, world.goal);
+          note += success ? ` Total path length ≈ ${L.toFixed(0)}px vs. straight-line ≈ ${d0.toFixed(0)}px.` : "";
+        }
+        return { done, note };
+      },
+    };
+  }
+
+  window.RMP = window.RMP || {};
+  window.RMP.vizDefs = window.RMP.vizDefs || {};
+  window.RMP.vizDefs.tangentbug = {
+    title: "Tangent Bug",
+    badge: "§3.4 / book §2.2",
+    subtitle: "A finite-range radial sensor lets the robot shortcut around obstacles instead of fully committing to boundary-following.",
+    width: 560, height: 360,
+    legend: [
+      { color: "#2b6cb0", label: "motion-to-goal" },
+      { color: "#6a4fb0", label: "heading to sensed point" },
+      { color: "#b7532c", label: "boundary-following" },
+      { color: "#2f8f5b", label: "leave / reached" },
+      { color: "#c23b3b", label: "hit point / stuck" },
+    ],
+    makeSim,
+    pythonCode: `
+def tangent_bug(start, goal, sense, is_free, range_=95, step=0.05):
+    """Tangent Bug: finite-range radial sensor picks the sensed point that
+    minimizes heuristic h(p) = dist(robot, p) + dist(p, goal)."""
+    pos, path = start, [start]
+
+    def line_of_sight_clear(a, b):
+        return not any(not is_free(pt) for pt in sample_segment(a, b))
+
+    while dist(pos, goal) > step:
+        los_end = goal if dist(pos, goal) <= range_ else pos + normalize(goal - pos) * range_
+
+        if line_of_sight_clear(pos, los_end):
+            nxt = pos + normalize(goal - pos) * step
+            if is_free(nxt):
+                pos = nxt
+                path.append(pos)
+                continue
+
+        sensed = sense(pos, range_)                      # radial scan
+        target = min(sensed, key=lambda p: dist(pos, p) + dist(p, goal))
+        nxt = pos + normalize(target - pos) * step
+        if is_free(nxt):
+            pos = nxt
+            path.append(pos)
+            continue
+
+        # --- hit: follow boundary, but keep re-sensing for a shortcut ---
+        q_hit = pos
+        d_followed = dist(q_hit, goal)
+        for p in trace_boundary(nearest_obstacle(nxt), q_hit, step):
+            path.append(p)
+            d_followed = min(d_followed, dist(p, goal))
+            sensed = sense(p, range_)
+            d_reach = min(dist(p, q) + dist(q, goal) for q in sensed)
+            if line_of_sight_clear(p, goal) and dist(p, goal) <= range_:
+                d_reach = min(d_reach, dist(p, goal))
+            if d_reach < d_followed:
+                pos = p                                    # shortcut found
+                break
+        else:
+            return None                                    # no shortcut, no path
+
+    path.append(goal)
+    return path
+`,
+  };
+})();
