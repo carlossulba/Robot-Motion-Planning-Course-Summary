@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/sitemap.xml

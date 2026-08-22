@@ -191,12 +191,6 @@ section[id] {
   scroll-margin-top: 76px;
 }
 
-#other-sampling-strategies {
-  margin-top: 2.2rem;
-  padding-top: 1.6rem;
-  border-top: 1px dashed var(--border);
-}
-
 /* ---------- Typography ---------- */
 
 h1, h2, h3, h4 { line-height: 1.25; font-weight: 700; letter-spacing: -0.01em; }
@@ -222,6 +216,8 @@ a { color: var(--accent); }
   font-weight: 600;
   margin-bottom: 0.4rem;
 }
+.kicker a { color: var(--text-faint); text-decoration: none; }
+.kicker a:hover { color: var(--accent); }
 
 .lede { color: var(--text-dim); font-size: 1.08rem; margin-top: 0.4rem; }
 
@@ -283,6 +279,83 @@ hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
   border: 1px solid var(--border);
 }
 .badge.book { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+
+/* ---------- Home page: chapter / algorithm link directory ---------- */
+
+section.chapter[id] { scroll-margin-top: 76px; }
+
+.chapter-sub {
+  margin-top: 2.2rem;
+  padding-top: 1.6rem;
+  border-top: 1px dashed var(--border);
+  scroll-margin-top: 76px;
+}
+
+.chapter-sub-intro {
+  color: var(--text-dim);
+  font-size: 0.94rem;
+  margin-top: -0.3rem;
+}
+
+.algo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.algo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.1rem 1.2rem;
+}
+
+.algo-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.algo-card h3 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+.algo-card h3 a {
+  color: var(--text);
+  text-decoration: none;
+}
+.algo-card h3 a:hover { color: var(--accent); }
+
+.algo-desc {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin: 0;
+  flex: 1;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: #fff;
+  padding: 0.42rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: inherit;
+}
+.btn:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
 
 /* =========================================================
    Visualization widget (shared "viz-core")

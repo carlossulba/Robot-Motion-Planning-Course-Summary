@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visibility Graph Algorithm — Interactive Demo | Robot Motion Planning</title>
+<meta name="description" content="Nodes = start, goal, and every obstacle vertex. Edges connect any two nodes with a clear line of sight. Shortest path via Dijkstra.">
+<link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/visibility-graph.html">
+<meta property="og:title" content="Visibility Graph Algorithm — Interactive Demo">
+<meta property="og:description" content="Nodes = start, goal, and every obstacle vertex. Edges connect any two nodes with a clear line of sight. Shortest path via Dijkstra.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/visibility-graph.html">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="../index.html">Motion<span>Planning</span></a>
+    <nav class="topnav">
+      <a href="../index.html#bug-algorithms">Bug Algorithms</a>
+      <a href="../index.html#potential-functions">Potential Functions</a>
+      <a href="../index.html#grid-based-planners">Grid-Based Planners</a>
+      <a href="../index.html#roadmaps">Roadmaps</a>
+      <a href="../index.html#cell-decompositions">Cell Decompositions</a>
+      <a href="../index.html#sampling-based">Sampling-Based Algorithms</a>
+    </nav>
+    <button class="theme-toggle" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<main class="page page-wide">
+  <div class="kicker"><a href="../index.html#roadmaps">&larr; Roadmaps</a></div>
+  <h1>Visibility Graph</h1>
+  <p class="lede">Nodes = start, goal, and every obstacle vertex. Edges connect any two nodes with a clear line of sight. Shortest path via Dijkstra.</p>
+
+  <div id="viz-visibilitygraph"></div>
+</main>
+
+<footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
+
+<script src="../js/common.js"></script>
+<script src="../js/viz/viz-core.js"></script>
+<script src="../js/viz/world.js"></script>
+<script src="../js/viz/visibilitygraph.js"></script>
+<script>
+  RMP.mountViz(document.getElementById("viz-visibilitygraph"), RMP.vizDefs.visibilitygraph);
+</script>
+</body>
+</html>

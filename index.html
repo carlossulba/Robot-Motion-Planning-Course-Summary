@@ -3,7 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Robot Motion Planning — Interactive Demos</title>
+<title>Robot Motion Planning — Interactive Algorithm Demos</title>
+<meta name="description" content="Interactive demos for every algorithm in a TU Munich course summary of Principles of Robot Motion (Choset et al.) — Bug algorithms, potential fields, roadmaps, cell decompositions, PRM, RRT, RRT*, and narrow-passage sampling.">
+<link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/">
+<meta property="og:title" content="Robot Motion Planning — Interactive Algorithm Demos">
+<meta property="og:description" content="Interactive demos for every algorithm in a TU Munich course summary of Principles of Robot Motion (Choset et al.), one dedicated page per algorithm.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -12,67 +18,209 @@
   <div class="site-header-inner">
     <a class="brand" href="index.html">Motion<span>Planning</span></a>
     <nav class="topnav">
-      <a href="#bug-algorithms">Bug Algorithms</a>
-      <a href="#potential-functions">Potential Functions</a>
-      <a href="#grid-based-planners">Grid-Based Planners</a>
-      <a href="#roadmaps">Roadmaps</a>
-      <a href="#cell-decompositions">Cell Decompositions</a>
-      <a href="#sampling-based">Sampling-Based</a>
+      <a href="index.html#bug-algorithms">Bug Algorithms</a>
+      <a href="index.html#potential-functions">Potential Functions</a>
+      <a href="index.html#grid-based-planners">Grid-Based Planners</a>
+      <a href="index.html#roadmaps">Roadmaps</a>
+      <a href="index.html#cell-decompositions">Cell Decompositions</a>
+      <a href="index.html#sampling-based">Sampling-Based Algorithms</a>
     </nav>
     <button class="theme-toggle" title="Toggle theme">☾</button>
   </div>
 </header>
 
 <main class="page page-wide">
-  <div class="kicker">TU Munich · Robot Motion Planning</div>
-  <h1>Interactive demos</h1>
-  <p class="lede">Companion demos for the course summary PDF — every algorithm's visualization, one per chapter,
-  nothing else. Jump straight to a chapter from the nav above, or link directly to
-  <code>index.html#chapter-id</code>.</p>
+  <div class="kicker">TU Munich &middot; Robot Motion Planning</div>
+  <h1>Interactive algorithm demos</h1>
+  <p class="lede">This site is the interactive companion to a course summary of <em>Principles of Robot Motion</em>
+  (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun) — not the summary itself, which lives in the
+  course PDF. Every algorithm the summary covers gets its own dedicated demo page here: a short description and a
+  live, steppable visualization. Jump to a chapter from the nav above, or straight to an algorithm below.</p>
 
-  <section id="bug-algorithms">
+  <section id="bug-algorithms" class="chapter">
     <h2>3 &middot; Bug Algorithms</h2>
-    <div id="viz-bug1"></div>
-    <div id="viz-bug2"></div>
-    <div id="viz-tangentbug"></div>
+    <div class="algo-grid">
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/bug1.html">Bug1</a></h3>
+          <span class="badge book">§3.2 / book §2.1</span>
+        </div>
+        <p class="algo-desc"><em>Exhaustive strategy: circle the whole obstacle once, remember the best exit point, then retrace to it.</em></p>
+        <a class="btn" href="demos/bug1.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/bug2.html">Bug2</a></h3>
+          <span class="badge book">§3.3 / book §2.1</span>
+        </div>
+        <p class="algo-desc"><em>Greedy strategy: leave the boundary the instant you cross the fixed start–goal m-line closer to the goal.</em></p>
+        <a class="btn" href="demos/bug2.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/tangent-bug.html">Tangent Bug</a></h3>
+          <span class="badge book">§3.4 / book §2.2</span>
+        </div>
+        <p class="algo-desc"><em>A finite-range radial sensor lets the robot shortcut around obstacles instead of fully committing to boundary-following.</em></p>
+        <a class="btn" href="demos/tangent-bug.html">Try it live &rarr;</a>
+      </article>
+    </div>
   </section>
 
-  <section id="potential-functions">
+  <section id="potential-functions" class="chapter">
     <h2>4 &middot; Potential Functions</h2>
-    <div id="viz-potentialfield"></div>
+    <div class="algo-grid">
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/potential-field.html">Attractive/Repulsive Potential Field</a></h3>
+          <span class="badge book">§4.3 / book §4.1</span>
+        </div>
+        <p class="algo-desc"><em>Gradient descent on U = U_att + U_rep. Unlike a navigation function, this field can (and sometimes does) trap the robot in a local minimum.</em></p>
+        <a class="btn" href="demos/potential-field.html">Try it live &rarr;</a>
+      </article>
+    </div>
   </section>
 
-  <section id="grid-based-planners">
+  <section id="grid-based-planners" class="chapter">
     <h2>4 &middot; Grid-Based Planners</h2>
-    <div id="viz-brushfire"></div>
-    <div id="viz-wavefront"></div>
+    <div class="algo-grid">
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/brushfire.html">Brushfire</a></h3>
+          <span class="badge book">§4.1 / book §4.3.2</span>
+        </div>
+        <p class="algo-desc"><em>A distance transform computed by multi-source BFS on a grid — the standard way to build a GVD from raster data.</em></p>
+        <a class="btn" href="demos/brushfire.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/wavefront.html">Wave-Front Planner</a></h3>
+          <span class="badge book">§4.2 / book §4.5</span>
+        </div>
+        <p class="algo-desc"><em>BFS numbering outward from the goal; any start's number gives the path length, found by walking downhill.</em></p>
+        <a class="btn" href="demos/wavefront.html">Try it live &rarr;</a>
+      </article>
+    </div>
   </section>
 
-  <section id="roadmaps">
+  <section id="roadmaps" class="chapter">
     <h2>5 &middot; Roadmaps</h2>
-    <div id="viz-visibilitygraph"></div>
-    <div id="viz-gvd"></div>
+    <div class="algo-grid">
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/visibility-graph.html">Visibility Graph</a></h3>
+          <span class="badge book">§5.1 / book §5.1</span>
+        </div>
+        <p class="algo-desc"><em>Nodes = start, goal, and every obstacle vertex. Edges connect any two nodes with a clear line of sight. Shortest path via Dijkstra.</em></p>
+        <a class="btn" href="demos/visibility-graph.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/gvd.html">Generalized Voronoi Diagram (roadmap)</a></h3>
+          <span class="badge book">§5.2 / book §5.2</span>
+        </div>
+        <p class="algo-desc"><em>Extracted from the Brushfire distance transform, then used as a roadmap: depart start, search the skeleton, arrive at goal.</em></p>
+        <a class="btn" href="demos/gvd.html">Try it live &rarr;</a>
+      </article>
+    </div>
   </section>
 
-  <section id="cell-decompositions">
+  <section id="cell-decompositions" class="chapter">
     <h2>6 &middot; Cell Decompositions</h2>
-    <div id="viz-trapezoidal"></div>
-    <div id="viz-boustrophedon"></div>
-    <div id="viz-quadtree"></div>
+    <div class="algo-grid">
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/trapezoidal.html">Trapezoidal Decomposition</a></h3>
+          <span class="badge book">§5.2.1 / book §6.1</span>
+        </div>
+        <p class="algo-desc"><em>A vertical line is extended from every obstacle vertex, slicing free space into trapezoids. Path = adjacency-graph search + centroid/midpoint connectors.</em></p>
+        <a class="btn" href="demos/trapezoidal.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/boustrophedon.html">Boustrophedon (Morse) Decomposition</a></h3>
+          <span class="badge book">§5.2.2 / book §6.2</span>
+        </div>
+        <p class="algo-desc"><em>A slab boundary is only placed where the number of free-space intervals actually changes — far coarser than trapezoidal decomposition.</em></p>
+        <a class="btn" href="demos/boustrophedon.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/quadtree.html">Quadtree Decomposition</a></h3>
+          <span class="badge book">§5.4 / book §6.2</span>
+        </div>
+        <p class="algo-desc"><em>Recursively split a mixed region into 4 quadrants until each leaf is uniformly free or uniformly occupied — an approximate decomposition.</em></p>
+        <a class="btn" href="demos/quadtree.html">Try it live &rarr;</a>
+      </article>
+    </div>
   </section>
 
-  <section id="sampling-based">
+  <section id="sampling-based" class="chapter">
     <h2>7 &middot; Sampling-Based Algorithms</h2>
-    <div id="viz-prm"></div>
-    <div id="viz-rrt"></div>
-    <div id="viz-rrtstar"></div>
+    <div class="algo-grid">
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/prm.html">PRM (Probabilistic Roadmap)</a></h3>
+          <span class="badge book">§6.1.1 / book §7.1</span>
+        </div>
+        <p class="algo-desc"><em>Sample free milestones, connect each to its k nearest neighbors, then search the resulting graph.</em></p>
+        <a class="btn" href="demos/prm.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/rrt.html">RRT (Rapidly-Exploring Random Tree)</a></h3>
+          <span class="badge book">§6.4 / book §7.2.2</span>
+        </div>
+        <p class="algo-desc"><em>Grow a tree from q_start: sample a point, extend from the nearest tree node by a fixed step, keep it if collision-free.</em></p>
+        <a class="btn" href="demos/rrt.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/rrt-star.html">RRT*</a></h3>
+          <span class="badge book">§6.4.2 / book §7.2.2</span>
+        </div>
+        <p class="algo-desc"><em>RRT plus rewiring: every new node picks the lowest-cost nearby parent, and can steal nearby nodes from the tree if that shortens their path.</em></p>
+        <a class="btn" href="demos/rrt-star.html">Try it live &rarr;</a>
+      </article>
+    </div>
 
-    <section id="other-sampling-strategies">
-      <h3>Other sampling strategies</h3>
-      <div id="viz-gaussiansampler"></div>
-      <div id="viz-bridgetest"></div>
-      <div id="viz-gvdretraction"></div>
-      <div id="viz-visibilitysampling"></div>
+    <section id="other-sampling-strategies" class="chapter-sub">
+      <h3>Other Sampling Strategies</h3>
+      <p class="chapter-sub-intro">Narrow-passage sampling heuristics — biasing where milestones land so a roadmap can actually find its way through thin gaps.</p>
+      <div class="algo-grid">
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/gaussian-sampler.html">Gaussian Sampler</a></h3>
+          <span class="badge book">narrow-passage sampling</span>
+        </div>
+        <p class="algo-desc"><em>Sample q1 uniformly, q2 at a Gaussian offset from q1; keep the free one as a milestone only if exactly one of the pair is in collision.</em></p>
+        <a class="btn" href="demos/gaussian-sampler.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/bridge-test.html">Bridge Test</a></h3>
+          <span class="badge book">narrow-passage sampling</span>
+        </div>
+        <p class="algo-desc"><em>Sample two colliding configurations; keep their midpoint as a milestone only if the midpoint itself is collision-free.</em></p>
+        <a class="btn" href="demos/bridge-test.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/gvd-retraction.html">GVD-Retraction Sampling</a></h3>
+          <span class="badge book">narrow-passage sampling</span>
+        </div>
+        <p class="algo-desc"><em>Sample a raw configuration, then retract it toward the nearest point of the Generalized Voronoi Diagram — the max-clearance skeleton that runs through every passage.</em></p>
+        <a class="btn" href="demos/gvd-retraction.html">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/visibility-sampling.html">Visibility-Based Sampling</a></h3>
+          <span class="badge book">narrow-passage sampling</span>
+        </div>
+        <p class="algo-desc"><em>Keep a candidate milestone only if it sees a useful amount of free space not already visible from the existing roadmap (estimated on a coarse grid).</em></p>
+        <a class="btn" href="demos/visibility-sampling.html">Try it live &rarr;</a>
+      </article>
+      </div>
     </section>
   </section>
 
@@ -81,51 +229,5 @@
 <footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
 
 <script src="js/common.js"></script>
-<script src="js/viz/viz-core.js"></script>
-<script src="js/viz/world.js"></script>
-<script src="js/viz/bug1.js"></script>
-<script src="js/viz/bug2.js"></script>
-<script src="js/viz/tangentbug.js"></script>
-<script src="js/viz/potentialfield.js"></script>
-<script src="js/viz/brushfire.js"></script>
-<script src="js/viz/wavefront.js"></script>
-<script src="js/viz/visibilitygraph.js"></script>
-<script src="js/viz/gvd.js"></script>
-<script src="js/viz/trapezoidal.js"></script>
-<script src="js/viz/boustrophedon.js"></script>
-<script src="js/viz/quadtree.js"></script>
-<script src="js/viz/prm.js"></script>
-<script src="js/viz/rrt.js"></script>
-<script src="js/viz/rrtstar.js"></script>
-<script src="js/viz/gaussiansampler.js"></script>
-<script src="js/viz/bridgetest.js"></script>
-<script src="js/viz/gvdretraction.js"></script>
-<script src="js/viz/visibilitysampling.js"></script>
-<script>
-  RMP.mountViz(document.getElementById("viz-bug1"), RMP.vizDefs.bug1);
-  RMP.mountViz(document.getElementById("viz-bug2"), RMP.vizDefs.bug2);
-  RMP.mountViz(document.getElementById("viz-tangentbug"), RMP.vizDefs.tangentbug);
-
-  RMP.mountViz(document.getElementById("viz-potentialfield"), RMP.vizDefs.potentialfield);
-
-  RMP.mountViz(document.getElementById("viz-brushfire"), RMP.vizDefs.brushfire);
-  RMP.mountViz(document.getElementById("viz-wavefront"), RMP.vizDefs.wavefront);
-
-  RMP.mountViz(document.getElementById("viz-visibilitygraph"), RMP.vizDefs.visibilitygraph);
-  RMP.mountViz(document.getElementById("viz-gvd"), RMP.vizDefs.gvd);
-
-  RMP.mountViz(document.getElementById("viz-trapezoidal"), RMP.vizDefs.trapezoidal);
-  RMP.mountViz(document.getElementById("viz-boustrophedon"), RMP.vizDefs.boustrophedon);
-  RMP.mountViz(document.getElementById("viz-quadtree"), RMP.vizDefs.quadtree);
-
-  RMP.mountViz(document.getElementById("viz-prm"), RMP.vizDefs.prm);
-  RMP.mountViz(document.getElementById("viz-rrt"), RMP.vizDefs.rrt);
-  RMP.mountViz(document.getElementById("viz-rrtstar"), RMP.vizDefs.rrtstar);
-
-  RMP.mountViz(document.getElementById("viz-gaussiansampler"), RMP.vizDefs.gaussiansampler);
-  RMP.mountViz(document.getElementById("viz-bridgetest"), RMP.vizDefs.bridgetest);
-  RMP.mountViz(document.getElementById("viz-gvdretraction"), RMP.vizDefs.gvdretraction);
-  RMP.mountViz(document.getElementById("viz-visibilitysampling"), RMP.vizDefs.visibilitysampling);
-</script>
 </body>
 </html>

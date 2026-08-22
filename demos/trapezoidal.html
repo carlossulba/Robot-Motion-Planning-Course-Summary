@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trapezoidal Decomposition — Interactive Demo | Robot Motion Planning</title>
+<meta name="description" content="A vertical line is extended from every obstacle vertex, slicing free space into trapezoids. Path = adjacency-graph search + centroid/midpoint connectors.">
+<link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/trapezoidal.html">
+<meta property="og:title" content="Trapezoidal Decomposition — Interactive Demo">
+<meta property="og:description" content="A vertical line is extended from every obstacle vertex, slicing free space into trapezoids. Path = adjacency-graph search + centroid/midpoint connectors.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/trapezoidal.html">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="../index.html">Motion<span>Planning</span></a>
+    <nav class="topnav">
+      <a href="../index.html#bug-algorithms">Bug Algorithms</a>
+      <a href="../index.html#potential-functions">Potential Functions</a>
+      <a href="../index.html#grid-based-planners">Grid-Based Planners</a>
+      <a href="../index.html#roadmaps">Roadmaps</a>
+      <a href="../index.html#cell-decompositions">Cell Decompositions</a>
+      <a href="../index.html#sampling-based">Sampling-Based Algorithms</a>
+    </nav>
+    <button class="theme-toggle" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<main class="page page-wide">
+  <div class="kicker"><a href="../index.html#cell-decompositions">&larr; Cell Decompositions</a></div>
+  <h1>Trapezoidal Decomposition</h1>
+  <p class="lede">A vertical line is extended from every obstacle vertex, slicing free space into trapezoids. Path = adjacency-graph search + centroid/midpoint connectors.</p>
+
+  <div id="viz-trapezoidal"></div>
+</main>
+
+<footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
+
+<script src="../js/common.js"></script>
+<script src="../js/viz/viz-core.js"></script>
+<script src="../js/viz/world.js"></script>
+<script src="../js/viz/trapezoidal.js"></script>
+<script>
+  RMP.mountViz(document.getElementById("viz-trapezoidal"), RMP.vizDefs.trapezoidal);
+</script>
+</body>
+</html>

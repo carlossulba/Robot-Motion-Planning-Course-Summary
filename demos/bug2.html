@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bug2 Algorithm — Interactive Demo | Robot Motion Planning</title>
+<meta name="description" content="Greedy strategy: leave the boundary the instant you cross the fixed start–goal m-line closer to the goal.">
+<link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/bug2.html">
+<meta property="og:title" content="Bug2 Algorithm — Interactive Demo">
+<meta property="og:description" content="Greedy strategy: leave the boundary the instant you cross the fixed start–goal m-line closer to the goal.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/bug2.html">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="../index.html">Motion<span>Planning</span></a>
+    <nav class="topnav">
+      <a href="../index.html#bug-algorithms">Bug Algorithms</a>
+      <a href="../index.html#potential-functions">Potential Functions</a>
+      <a href="../index.html#grid-based-planners">Grid-Based Planners</a>
+      <a href="../index.html#roadmaps">Roadmaps</a>
+      <a href="../index.html#cell-decompositions">Cell Decompositions</a>
+      <a href="../index.html#sampling-based">Sampling-Based Algorithms</a>
+    </nav>
+    <button class="theme-toggle" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<main class="page page-wide">
+  <div class="kicker"><a href="../index.html#bug-algorithms">&larr; Bug Algorithms</a></div>
+  <h1>Bug2</h1>
+  <p class="lede">Greedy strategy: leave the boundary the instant you cross the fixed start–goal m-line closer to the goal.</p>
+
+  <div id="viz-bug2"></div>
+</main>
+
+<footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
+
+<script src="../js/common.js"></script>
+<script src="../js/viz/viz-core.js"></script>
+<script src="../js/viz/world.js"></script>
+<script src="../js/viz/bug2.js"></script>
+<script>
+  RMP.mountViz(document.getElementById("viz-bug2"), RMP.vizDefs.bug2);
+</script>
+</body>
+</html>
