@@ -36,6 +36,40 @@
     return false;
   }
 
+  // ---- reduced/simplified visibility graph: keep only tangent lines ----
+  // A line through A and B is a tangent of a polygon at one of its own
+  // vertices V (V === A or V === B) iff every other vertex of that polygon
+  // lies weakly on one side of the line (the polygon doesn't straddle it).
+  // Start/goal are point-obstacles: trivially "all on one side" (no other
+  // vertices to check), so edges from start/goal are kept whenever the one
+  // real obstacle endpoint (if any) passes the test. Two nodes on the SAME
+  // obstacle are excluded outright -- the reduced graph only keeps the
+  // common tangents *between* obstacles (supporting: both obstacles on the
+  // same side; separating: one on each side -- both cases pass this test).
+  function sideOfLine(ax, ay, bx, by, px, py) {
+    const cross = (bx - ax) * (py - ay) - (by - ay) * (px - ax);
+    return cross > 1e-6 ? 1 : cross < -1e-6 ? -1 : 0;
+  }
+
+  function isTangentAt(pts, ax, ay, bx, by) {
+    let sawPos = false, sawNeg = false;
+    for (const [x, y] of pts) {
+      const s = sideOfLine(ax, ay, bx, by, x, y);
+      if (s > 0) sawPos = true; else if (s < 0) sawNeg = true;
+      if (sawPos && sawNeg) return false;
+    }
+    return true;
+  }
+
+  function isReducedGraphEdge(nodeA, nodeB, obstacles) {
+    const oa = nodeA.kind === "vertex" ? obstacles[nodeA.obs] : null;
+    const ob = nodeB.kind === "vertex" ? obstacles[nodeB.obs] : null;
+    if (oa && ob && oa === ob) return false; // same-obstacle vertex pair: not an inter-obstacle tangent
+    if (oa && !isTangentAt(oa.pts, nodeA.x, nodeA.y, nodeB.x, nodeB.y)) return false;
+    if (ob && !isTangentAt(ob.pts, nodeA.x, nodeA.y, nodeB.x, nodeB.y)) return false;
+    return true;
+  }
+
   function dijkstra(nodes, adj, s, t) {
     const dd = new Array(nodes.length).fill(Infinity);
     const prev = new Array(nodes.length).fill(-1);
@@ -55,7 +89,7 @@
     return { path: path.reverse(), length: dd[t] };
   }
 
-  function computeGraph(world) {
+  function computeGraph(world, reduced) {
     const nodes = [
       { x: world.start.x, y: world.start.y, kind: "start" },
       { x: world.goal.x, y: world.goal.y, kind: "goal" },
@@ -64,18 +98,20 @@
 
     const edges = [];
     const adj = nodes.map(() => []);
+    let fullEdgeCount = 0;
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
-        if (!segmentBlocked(nodes[i], nodes[j], world.obstacles)) {
-          const w = dist(nodes[i], nodes[j]);
-          edges.push([i, j, w]);
-          adj[i].push([j, w]);
-          adj[j].push([i, w]);
-        }
+        if (segmentBlocked(nodes[i], nodes[j], world.obstacles)) continue;
+        fullEdgeCount++;
+        if (reduced && !isReducedGraphEdge(nodes[i], nodes[j], world.obstacles)) continue;
+        const w = dist(nodes[i], nodes[j]);
+        edges.push([i, j, w]);
+        adj[i].push([j, w]);
+        adj[j].push([i, w]);
       }
     }
     const sp = dijkstra(nodes, adj, 0, 1);
-    return { nodes, edges, sp };
+    return { nodes, edges, sp, fullEdgeCount };
   }
 
   function draw(ctx, world, data, edgesRevealed, pathRevealed) {
@@ -117,22 +153,24 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), polygonsOnly: true, maxR: 30 });
-    const data = computeGraph(world);
+  function makeSim({ rng, params, width, height, world }) {
+    const reduced = !!(params && params.reduced);
+    const w = world || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), polygonsOnly: true, maxR: 30 });
+    const data = computeGraph(w, reduced);
     let idx = 0;
     const total = data.edges.length + 1;
     return {
       draw(ctx) {
         const edgesRevealed = Math.min(idx, data.edges.length);
-        draw(ctx, world, data, edgesRevealed, idx >= data.edges.length);
+        draw(ctx, w, data, edgesRevealed, idx >= data.edges.length);
       },
       step() {
         idx = Math.min(idx + 1, total);
         const done = idx >= total;
         let note;
-        if (idx < data.edges.length) note = `Testing node pair ${idx} of ${data.edges.length + "+"}: unobstructed line of sight — edge added.`;
-        else if (data.sp) note = `Graph complete (${data.edges.length} edges). Dijkstra's shortest path over the graph has length ≈ ${data.sp.length.toFixed(0)}px, using ${data.sp.path.length} nodes.`;
+        const kind = reduced ? "reduced (tangent-only)" : "full";
+        if (idx < data.edges.length) note = `Testing node pair ${idx} of ${data.edges.length}+ (${kind} graph): unobstructed line of sight — edge added.`;
+        else if (data.sp) note = `Graph complete (${data.edges.length} edges${reduced ? `, vs. ${data.fullEdgeCount} in the full graph` : ""}). Dijkstra's shortest path over the graph has length ≈ ${data.sp.length.toFixed(0)}px, using ${data.sp.path.length} nodes.`;
         else note = `Graph complete (${data.edges.length} edges), but q_start and q_goal ended up in different components — no path exists.`;
         return { done, note };
       },
@@ -145,11 +183,14 @@
     title: "Visibility Graph",
     badge: "§5.1 / book §5.1",
     subtitle: "Nodes = start, goal, and every obstacle vertex. Edges connect any two nodes with a clear line of sight. Shortest path via Dijkstra.",
-    width: 560, height: 360,
+    width: 480, height: 320,
     legend: [
       { color: "rgba(111,168,220,0.8)", label: "visibility edge" },
       { color: "#2f8f5b", label: "shortest path" },
       { color: "#8892a0", label: "obstacle vertex" },
+    ],
+    params: [
+      { key: "reduced", label: "Reduced (tangent-only) graph", type: "checkbox", value: false },
     ],
     makeSim,
     pythonCode: `

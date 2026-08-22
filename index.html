@@ -39,30 +39,31 @@
 
   <section id="bug-algorithms" class="chapter">
     <h2>3 &middot; Bug Algorithms</h2>
+    <p class="chapter-sub-intro">Bug1, Bug2, and Tangent Bug now share one page and one obstacle instance so their strategies are directly comparable.</p>
     <div class="algo-grid">
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/bug1.html">Bug1</a></h3>
+          <h3><a href="demos/bug-algorithms.html#bug1">Bug1</a></h3>
           <span class="badge book">§3.2 / book §2.1</span>
         </div>
         <p class="algo-desc"><em>Exhaustive strategy: circle the whole obstacle once, remember the best exit point, then retrace to it.</em></p>
-        <a class="btn" href="demos/bug1.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/bug-algorithms.html#bug1">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/bug2.html">Bug2</a></h3>
+          <h3><a href="demos/bug-algorithms.html#bug2">Bug2</a></h3>
           <span class="badge book">§3.3 / book §2.1</span>
         </div>
         <p class="algo-desc"><em>Greedy strategy: leave the boundary the instant you cross the fixed start–goal m-line closer to the goal.</em></p>
-        <a class="btn" href="demos/bug2.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/bug-algorithms.html#bug2">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/tangent-bug.html">Tangent Bug</a></h3>
+          <h3><a href="demos/bug-algorithms.html#tangentbug">Tangent Bug</a></h3>
           <span class="badge book">§3.4 / book §2.2</span>
         </div>
         <p class="algo-desc"><em>A finite-range radial sensor lets the robot shortcut around obstacles instead of fully committing to boundary-following.</em></p>
-        <a class="btn" href="demos/tangent-bug.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/bug-algorithms.html#tangentbug">Try it live &rarr;</a>
       </article>
     </div>
   </section>
@@ -83,44 +84,46 @@
 
   <section id="grid-based-planners" class="chapter">
     <h2>4 &middot; Grid-Based Planners</h2>
+    <p class="chapter-sub-intro">Brushfire and the Wave-Front planner now share one page and one grid instance so the two flood-fills are directly comparable.</p>
     <div class="algo-grid">
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/brushfire.html">Brushfire</a></h3>
+          <h3><a href="demos/grid-based-planners.html#brushfire">Brushfire</a></h3>
           <span class="badge book">§4.1 / book §4.3.2</span>
         </div>
         <p class="algo-desc"><em>A distance transform computed by multi-source BFS on a grid — the standard way to build a GVD from raster data.</em></p>
-        <a class="btn" href="demos/brushfire.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/grid-based-planners.html#brushfire">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/wavefront.html">Wave-Front Planner</a></h3>
+          <h3><a href="demos/grid-based-planners.html#wavefront">Wave-Front Planner</a></h3>
           <span class="badge book">§4.2 / book §4.5</span>
         </div>
         <p class="algo-desc"><em>BFS numbering outward from the goal; any start's number gives the path length, found by walking downhill.</em></p>
-        <a class="btn" href="demos/wavefront.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/grid-based-planners.html#wavefront">Try it live &rarr;</a>
       </article>
     </div>
   </section>
 
   <section id="roadmaps" class="chapter">
     <h2>5 &middot; Roadmaps</h2>
+    <p class="chapter-sub-intro">Visibility Graph and the GVD roadmap now share one page and one obstacle instance so the two roadmap styles are directly comparable.</p>
     <div class="algo-grid">
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/visibility-graph.html">Visibility Graph</a></h3>
+          <h3><a href="demos/roadmaps.html#visibilitygraph">Visibility Graph</a></h3>
           <span class="badge book">§5.1 / book §5.1</span>
         </div>
         <p class="algo-desc"><em>Nodes = start, goal, and every obstacle vertex. Edges connect any two nodes with a clear line of sight. Shortest path via Dijkstra.</em></p>
-        <a class="btn" href="demos/visibility-graph.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/roadmaps.html#visibilitygraph">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/gvd.html">Generalized Voronoi Diagram (roadmap)</a></h3>
+          <h3><a href="demos/roadmaps.html#gvd">Generalized Voronoi Diagram (roadmap)</a></h3>
           <span class="badge book">§5.2 / book §5.2</span>
         </div>
         <p class="algo-desc"><em>Extracted from the Brushfire distance transform, then used as a roadmap: depart start, search the skeleton, arrive at goal.</em></p>
-        <a class="btn" href="demos/gvd.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/roadmaps.html#gvd">Try it live &rarr;</a>
       </article>
     </div>
   </section>

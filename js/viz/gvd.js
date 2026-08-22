@@ -1,63 +1,33 @@
 /* GVD / Voronoi roadmap visualization: extract the Generalized Voronoi
    Diagram as a graph (via the Brushfire distance transform), connect start
-   and goal onto it, and search the graph for a maximum-clearance path. */
+   and goal onto it, and search the graph for a maximum-clearance path.
+
+   Reuses brushfire.js's computeBrushfire/draw (window.RMP.brushfireCore)
+   directly rather than recomputing the distance transform -- and, since the
+   GVD comes out of Brushfire, the demo now visibly plays the Brushfire
+   ring-propagation phase before revealing the skeleton extracted from it. */
 (function () {
   "use strict";
-  const { makeWorld } = window.RMP;
+  const { makeWorld, brushfireCore } = window.RMP;
 
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
-  function computeGvd(world) {
-    const { cols, rows, grid, cellSize } = world;
-    const idx = (i, j) => j * cols + i;
-    const distArr = new Int32Array(cols * rows).fill(-1);
-    const label = new Int32Array(cols * rows).fill(-1);
-    let frontier = [];
-    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-      if (grid[idx(i, j)] !== 1) continue;
-      const nbrs = [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]];
-      if (!nbrs.some(([ni, nj]) => ni >= 0 && nj >= 0 && ni < cols && nj < rows && grid[idx(ni, nj)] === 0)) continue;
-      const cx = (i + 0.5) * cellSize, cy = (j + 0.5) * cellSize;
-      const srcId = world.obstacles.indexOf(world.nearestObstacle(cx, cy));
-      distArr[idx(i, j)] = 0; label[idx(i, j)] = srcId; frontier.push([i, j]);
-    }
-    while (frontier.length) {
-      const next = [];
-      for (const [i, j] of frontier) {
-        const here = idx(i, j);
-        for (const [ni, nj] of [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]]) {
-          if (ni < 0 || nj < 0 || ni >= cols || nj >= rows) continue;
-          const k = idx(ni, nj);
-          if (grid[k] !== 0 || distArr[k] !== -1) continue;
-          distArr[k] = distArr[here] + 1; label[k] = label[here]; next.push([ni, nj]);
-        }
-      }
-      frontier = next;
-    }
-
-    const gvdSet = new Set();
-    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-      const k = idx(i, j);
-      if (grid[k] !== 0 || label[k] < 0) continue;
-      for (const [ni, nj] of [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]]) {
-        if (ni < 0 || nj < 0 || ni >= cols || nj >= rows) continue;
-        const k2 = idx(ni, nj);
-        if (grid[k2] === 0 && label[k2] >= 0 && label[k2] !== label[k]) { gvdSet.add(k); break; }
-      }
-    }
-    const gvdCells = Array.from(gvdSet).map((k) => ({ i: k % cols, j: Math.floor(k / cols), x: (k % cols + 0.5) * cellSize, y: (Math.floor(k / cols) + 0.5) * cellSize }));
+  function computeGvd(world, connectivity) {
+    const { cellSize } = world;
+    const bf = brushfireCore.computeBrushfire(world, connectivity || 4);
+    const gvdCells = bf.gvd.map(([i, j]) => ({ i, j, x: (i + 0.5) * cellSize, y: (j + 0.5) * cellSize }));
 
     // graph over GVD cells (8-connectivity) + start/goal connectors
     const n = gvdCells.length;
     const adj = Array.from({ length: n + 2 }, () => []);
     const S = n, G = n + 1;
-    const keyToIdx = new Map(gvdCells.map((c, k) => [c.j * cols + c.i, k]));
+    const keyToIdx = new Map(gvdCells.map((c, k) => [c.j * world.cols + c.i, k]));
     const REACH = 2; // bridge small grid-discretization gaps in the skeleton
     gvdCells.forEach((c, k) => {
       for (let dj = -REACH; dj <= REACH; dj++) {
         for (let di = -REACH; di <= REACH; di++) {
           if (di === 0 && dj === 0) continue;
-          const kk = keyToIdx.get((c.j + dj) * cols + (c.i + di));
+          const kk = keyToIdx.get((c.j + dj) * world.cols + (c.i + di));
           if (kk !== undefined) adj[k].push([kk, dist(c, gvdCells[kk])]);
         }
       }
@@ -89,10 +59,14 @@
     }
     const pointOf = (id) => id === S ? world.start : id === G ? world.goal : gvdCells[id];
 
-    return { gvdCells, path, pointOf, length: dd[G] };
+    return { gvdCells, path, pointOf, length: dd[G], brushfire: bf };
   }
 
-  function draw(ctx, world, data, cellsRevealed, showConnectors, showPath) {
+  function draw(ctx, world, data, phase, brushfireRings, cellsRevealed, showConnectors, showPath) {
+    if (phase === "brushfire") {
+      brushfireCore.draw(ctx, world, data.brushfire.layers, data.brushfire.gvd, brushfireRings, false);
+      return;
+    }
     world.draw(ctx, { alpha: 0.9 });
     ctx.save();
     ctx.fillStyle = "#b7532c";
@@ -130,26 +104,56 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), cellSize: 6 });
-    const data = computeGvd(world);
+  // pseudocode line indices (0-based)
+  const L_INIT = 0, L_PROPAGATE = 1, L_MARK = 2, L_CONNECT = 3, L_SEARCH = 4;
+
+  function makeSim({ rng, params, width, height, world }) {
+    const conn = params && params.connectivity ? 8 : 4;
+    const w = world || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), cellSize: 6 });
+    const data = computeGvd(w, conn);
+    const bfRings = data.brushfire.layers.length;
     const revealStep = Math.max(1, Math.floor(data.gvdCells.length / 60));
-    let idx = 0;
     const cellSteps = Math.ceil(data.gvdCells.length / revealStep);
-    const total = cellSteps + 2; // + connectors step + path step
+    let idx = 0;
+    // phase A: bfRings steps replaying the Brushfire propagation
+    // phase B: cellSteps steps revealing the GVD skeleton extracted from it
+    // phase C: 1 step showing start/goal connectors
+    // phase D: 1 step showing the searched max-clearance path
+    const total = bfRings + cellSteps + 2;
+
     return {
       draw(ctx) {
-        const cellsRevealed = Math.min(idx * revealStep, data.gvdCells.length);
-        draw(ctx, world, data, cellsRevealed, idx >= cellSteps, idx >= cellSteps + 1);
+        if (idx <= bfRings) {
+          draw(ctx, w, data, "brushfire", idx, 0, false, false);
+        } else {
+          const skIdx = idx - bfRings;
+          const cellsRevealed = Math.min(skIdx * revealStep, data.gvdCells.length);
+          draw(ctx, w, data, "gvd", 0, cellsRevealed, skIdx >= cellSteps, skIdx >= cellSteps + 1);
+        }
       },
       step() {
         idx = Math.min(idx + 1, total);
         const done = idx >= total;
-        let note;
-        if (idx < cellSteps) note = `Extracting the GVD skeleton from the distance transform (${Math.min(idx * revealStep, data.gvdCells.length)} of ${data.gvdCells.length} cells).`;
-        else if (idx === cellSteps) note = "Skeleton complete. Connect q_start and q_goal to their nearest GVD point.";
-        else note = data.path ? `Searching the GVD graph: max-clearance path found, length ≈ ${data.length.toFixed(0)}px.` : "No GVD path found connecting start and goal (disconnected roadmap in this layout).";
-        return { done, note };
+        let note, line;
+        if (idx <= bfRings) {
+          note = idx === 1
+            ? `Init: marking obstacle-adjacent cells as the Brushfire seed frontier.`
+            : `Replaying Brushfire's distance-transform propagation (ring ${idx} of ${bfRings}) — the GVD is extracted from this.`;
+          line = idx === 1 ? L_INIT : L_PROPAGATE;
+        } else {
+          const skIdx = idx - bfRings;
+          if (skIdx < cellSteps) {
+            note = `Marking GVD cells where two distinct waves met at equal value (${Math.min(skIdx * revealStep, data.gvdCells.length)} of ${data.gvdCells.length}).`;
+            line = L_MARK;
+          } else if (skIdx === cellSteps) {
+            note = "Skeleton complete. Connect q_start and q_goal to their nearest GVD point.";
+            line = L_CONNECT;
+          } else {
+            note = data.path ? `Searching the GVD graph: max-clearance path found, length ≈ ${data.length.toFixed(0)}px.` : "No GVD path found connecting start and goal (disconnected roadmap in this layout).";
+            line = L_SEARCH;
+          }
+        }
+        return { done, note, line };
       },
     };
   }
@@ -161,17 +165,28 @@
     title: "Generalized Voronoi Diagram (roadmap)",
     badge: "§5.2 / book §5.2",
     subtitle: "Extracted from the Brushfire distance transform, then used as a roadmap: depart start, search the skeleton, arrive at goal.",
-    width: 560, height: 360,
+    width: 480, height: 320,
     legend: [
+      { color: "rgb(214,69,43)", label: "Brushfire ring (replay)" },
       { color: "#b7532c", label: "GVD skeleton" },
       { color: "#8892a0", label: "depart/arrive connector" },
       { color: "#2f8f5b", label: "max-clearance path" },
     ],
+    params: [
+      { key: "connectivity", label: "8-connectivity", type: "checkbox", value: false },
+    ],
+    pseudocode: [
+      "grid init: free cells <- 0, obstacle cells <- 1",
+      "propagate distance-to-nearest-obstacle (Brushfire)",
+      "mark a cell as GVD if two distinct waves meet there at equal value",
+      "connect q_start, q_goal onto the nearest GVD point",
+      "search the GVD graph for a path (max-clearance route)",
+    ],
     makeSim,
     pythonCode: `
-def gvd_roadmap(grid, start, goal):
-    dist, label = brushfire(grid)                    # see the Potential Functions page
-    gvd = gvd_cells(grid, dist, label)                # equidistant cells -> the skeleton
+def gvd_roadmap(grid, start, goal, connectivity=4):
+    dist, label = brushfire(grid, connectivity)        # see the Brushfire demo
+    gvd = gvd_cells(grid, dist, label)                  # equidistant cells -> the skeleton
 
     graph = build_adjacency(gvd, connectivity=8)
     s_node = nearest(gvd, start)
@@ -179,7 +194,7 @@ def gvd_roadmap(grid, start, goal):
     graph.add_edge("start", s_node, weight=dist_to(start, s_node))
     graph.add_edge("goal", g_node, weight=dist_to(goal, g_node))
 
-    return dijkstra(graph, "start", "goal")           # max-clearance path
+    return dijkstra(graph, "start", "goal")             # max-clearance path
 `,
   };
 })();

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grid-Based Planners — Interactive Demos | Robot Motion Planning</title>
+<meta name="description" content="Brushfire and Wave-Front compared side by side on the exact same grid, obstacles, start, and goal.">
+<link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/grid-based-planners.html">
+<meta property="og:title" content="Grid-Based Planners — Interactive Demos">
+<meta property="og:description" content="Brushfire and Wave-Front compared side by side on the exact same grid, obstacles, start, and goal.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/grid-based-planners.html">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="../index.html">Motion<span>Planning</span></a>
+    <nav class="topnav">
+      <a href="../index.html#bug-algorithms">Bug Algorithms</a>
+      <a href="../index.html#potential-functions">Potential Functions</a>
+      <a href="../index.html#grid-based-planners">Grid-Based Planners</a>
+      <a href="../index.html#roadmaps">Roadmaps</a>
+      <a href="../index.html#cell-decompositions">Cell Decompositions</a>
+      <a href="../index.html#sampling-based">Sampling-Based Algorithms</a>
+    </nav>
+    <button class="theme-toggle" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<main class="page page-wide">
+  <div class="kicker"><a href="../index.html#grid-based-planners">&larr; Grid-Based Planners</a></div>
+  <h1>Grid-Based Planners</h1>
+  <p class="lede">Brushfire and the Wave-Front planner, run against the exact same grid, obstacles, start, and goal so the two flood-fills are directly comparable.</p>
+
+  <div class="shared-instance-bar">
+    <button class="viz-btn primary" id="btn-shared-gen">🎲 Generate new (all panels)</button>
+    <span class="note">Regenerates one shared grid world for both panels below. Each panel's own Step / Play / Reset re-runs only that algorithm against the current grid.</span>
+  </div>
+
+  <h2 id="brushfire" class="panel-anchor-heading">Brushfire <span class="badge book">§4.1 / book §4.3.2</span></h2>
+  <p class="algo-desc">A distance transform computed by multi-source BFS on a grid — the standard way to build a GVD from raster data.</p>
+  <div id="viz-brushfire"></div>
+
+  <h2 id="wavefront" class="panel-anchor-heading">Wave-Front Planner <span class="badge book">§4.2 / book §4.5</span></h2>
+  <p class="algo-desc">BFS numbering outward from the goal; any start's number gives the path length, found by walking downhill.</p>
+  <div id="viz-wavefront"></div>
+</main>
+
+<footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
+
+<script src="../js/common.js"></script>
+<script src="../js/viz/viz-core.js"></script>
+<script src="../js/viz/world.js"></script>
+<script src="../js/viz/gridflood.js"></script>
+<script src="../js/viz/brushfire.js"></script>
+<script src="../js/viz/wavefront.js"></script>
+<script>
+  (function () {
+    var W = 480, H = 320;
+    var seed = (Math.random() * 1e9) | 0;
+
+    function buildWorld(s) {
+      return RMP.makeWorld(RMP.mulberry32(s), { width: W, height: H, nObstacles: 3 + Math.floor(Math.random() * 3), cellSize: 7 });
+    }
+
+    var world = buildWorld(seed);
+
+    var handles = [
+      RMP.mountViz(document.getElementById("viz-brushfire"), Object.assign({}, RMP.vizDefs.brushfire, { world: world })),
+      RMP.mountViz(document.getElementById("viz-wavefront"), Object.assign({}, RMP.vizDefs.wavefront, { world: world })),
+    ];
+
+    document.getElementById("btn-shared-gen").addEventListener("click", function () {
+      seed = (Math.random() * 1e9) | 0;
+      world = buildWorld(seed);
+      handles.forEach(function (h) { h.setWorld(world); });
+    });
+  })();
+</script>
+</body>
+</html>

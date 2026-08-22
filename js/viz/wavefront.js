@@ -5,35 +5,19 @@
    greedy descent -- no need to recompute anything for a different start. */
 (function () {
   "use strict";
-  const { makeWorld } = window.RMP;
+  const { makeWorld, gridFlood } = window.RMP;
 
-  function computeWaveFront(world) {
+  function computeWaveFront(world, connectivity) {
     const { cols, rows, grid, cellSize } = world;
     const idx = (i, j) => j * cols + i;
-    const val = new Int32Array(cols * rows).fill(0); // 1 = obstacle, 0 = unvisited free, >=2 = wave number
-    for (let k = 0; k < grid.length; k++) if (grid[k] === 1) val[k] = 1;
+    const nbrFn = gridFlood.neighborsFor(connectivity);
 
     const sc = world.cellOf(world.start.x, world.start.y);
     const gc = world.cellOf(world.goal.x, world.goal.y);
-    val[idx(gc.i, gc.j)] = 2;
-    let frontier = [[gc.i, gc.j]];
-    const layers = [frontier];
 
-    while (frontier.length) {
-      const next = [];
-      for (const [i, j] of frontier) {
-        const here = val[idx(i, j)];
-        for (const [ni, nj] of [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1]]) {
-          if (ni < 0 || nj < 0 || ni >= cols || nj >= rows) continue;
-          const k = idx(ni, nj);
-          if (val[k] !== 0) continue;
-          val[k] = here + 1;
-          next.push([ni, nj]);
-        }
-      }
-      if (next.length) layers.push(next);
-      frontier = next;
-    }
+    const { val, layers } = gridFlood.bfsLayers(cols, rows, grid, [[gc.i, gc.j]], {
+      connectivity, seedValue: 2,
+    });
 
     const sv = val[idx(sc.i, sc.j)];
     let path = [];
@@ -44,7 +28,7 @@
         const [i, j] = cur;
         const want = val[idx(i, j)] - 1;
         let nextCell = null;
-        for (const [ni, nj] of [[i - 1, j], [i + 1, j], [i, j - 1], [i, j + 1], [i - 1, j - 1], [i + 1, j - 1], [i - 1, j + 1], [i + 1, j + 1]]) {
+        for (const [ni, nj] of nbrFn(i, j)) {
           if (ni < 0 || nj < 0 || ni >= cols || nj >= rows) continue;
           if (val[idx(ni, nj)] === want) { nextCell = [ni, nj]; break; }
         }
@@ -57,18 +41,7 @@
     return { val, layers, path, reachable: sv >= 2, cellSize, cols, rows };
   }
 
-  function heatColor(t) {
-    const stops = [[0.0, [214, 150, 43]], [0.5, [120, 160, 90]], [1.0, [59, 110, 160]]];
-    for (let i = 1; i < stops.length; i++) {
-      if (t <= stops[i][0]) {
-        const [t0, c0] = stops[i - 1], [t1, c1] = stops[i];
-        const f = (t - t0) / (t1 - t0 || 1);
-        const c = c0.map((v, k) => Math.round(v + (c1[k] - v) * f));
-        return `rgb(${c[0]},${c[1]},${c[2]})`;
-      }
-    }
-    return "rgb(59,110,160)";
-  }
+  const heatColor = gridFlood.heatColorFactory([[0.0, [214, 150, 43]], [0.5, [120, 160, 90]], [1.0, [59, 110, 160]]]);
 
   function draw(ctx, world, data, layersRevealed, pathRevealed) {
     const { cellSize } = world;
@@ -102,9 +75,13 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), cellSize: 7 });
-    const data = computeWaveFront(world);
+  // pseudocode line indices (0-based)
+  const L_SEED = 0, L_PROPAGATE = 2, L_EXTRACT = 3, L_EXTRACT_DONE = 4;
+
+  function makeSim({ rng, params, width, height, world }) {
+    const conn = params && params.connectivity ? 8 : 4;
+    const w = world || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), cellSize: 7 });
+    const data = computeWaveFront(w, conn);
     let idx = 0;
     const totalLayerSteps = data.layers.length;
     const totalSteps = totalLayerSteps + (data.reachable ? data.path.length : 1);
@@ -112,21 +89,31 @@
       draw(ctx) {
         const layersRevealed = Math.min(idx, totalLayerSteps);
         const pathRevealed = Math.max(0, idx - totalLayerSteps);
-        draw(ctx, world, data, layersRevealed, pathRevealed);
+        draw(ctx, w, data, layersRevealed, pathRevealed);
       },
       step() {
         idx = Math.min(idx + 1, totalSteps);
         const done = idx >= totalSteps;
-        let note;
-        if (idx < totalLayerSteps) {
-          note = `Numbering ring ${idx} of ${totalLayerSteps} outward from q<sub>goal</sub> (value ${idx + 1}).`;
+        let note, line;
+        if (idx === 1) {
+          note = `Seed: q_goal's cell <- 2 (obstacle cells already <- 1).`;
+          line = L_SEED;
+        } else if (idx < totalLayerSteps) {
+          note = `Numbering ring ${idx} of ${totalLayerSteps} outward from q<sub>goal</sub> (value ${idx + 1}, ${conn}-connectivity).`;
+          line = L_PROPAGATE;
         } else if (data.reachable) {
-          note = "Walking downhill from q<sub>start</sub>: at each cell, step to any neighbor numbered exactly one lower.";
-          if (done) note = `Path extracted — length ${data.path.length - 1} grid steps. The start cell's number (minus one) gives the shortest path length in this grid's connectivity, and this downhill walk works from any starting cell.`;
+          const atGoalStep = done;
+          note = "Walking downhill from q<sub>start</sub>: at each cell, step to a strictly smaller neighbor value.";
+          line = L_EXTRACT;
+          if (atGoalStep) {
+            note = `Path extracted — length ${data.path.length - 1} grid steps, reaching q<sub>goal</sub>. The start cell's number (minus one) gives the shortest path length in this grid's connectivity, and this downhill walk works from any starting cell.`;
+            line = L_EXTRACT_DONE;
+          }
         } else {
           note = "Every reachable free cell has been numbered and q<sub>start</sub> never got one — no path exists.";
+          line = L_PROPAGATE;
         }
-        return { done, note };
+        return { done, note, line };
       },
     };
   }
@@ -137,17 +124,27 @@
     title: "Wave-Front Planner",
     badge: "§4.2 / book §4.5",
     subtitle: "BFS numbering outward from the goal; any start's number gives the path length, found by walking downhill.",
-    width: 560, height: 360,
+    width: 480, height: 320,
     legend: [
       { color: "rgb(214,150,43)", label: "close to goal" },
       { color: "rgb(59,110,160)", label: "far from goal" },
       { color: "#2f8f5b", label: "extracted path" },
     ],
+    params: [
+      { key: "connectivity", label: "8-connectivity", type: "checkbox", value: false },
+    ],
+    pseudocode: [
+      "seed: goal cell <- 2, obstacle cells <- 1",
+      "Propagate: repeat until every reachable free cell has a value:",
+      { text: "free neighbor of a wave-k cell <- k + 1", indent: 1 },
+      "extract path: from start, repeatedly step to a strictly",
+      { text: "smaller neighbor value, until reaching the goal", indent: 1 },
+    ],
     makeSim,
     pythonCode: `
 from collections import deque
 
-def wavefront(grid, start, goal):
+def wavefront(grid, start, goal, connectivity=4):
     """grid[j][i] == 1 for obstacles. Seeds the flood fill at the GOAL, so the
     resulting field lets a robot starting anywhere reach the goal by walking
     downhill -- that is what makes the planner immune to local minima.
@@ -158,9 +155,10 @@ def wavefront(grid, start, goal):
     val[gj][gi] = 2
     q = deque([(gi, gj)])
 
+    neighbors = neighbors8 if connectivity == 8 else neighbors4
     while q:
         i, j = q.popleft()
-        for ni, nj in neighbors4(i, j, cols, rows):
+        for ni, nj in neighbors(i, j, cols, rows):
             if val[nj][ni] == 0:
                 val[nj][ni] = val[j][i] + 1
                 q.append((ni, nj))
@@ -173,7 +171,7 @@ def wavefront(grid, start, goal):
     i, j = si, sj
     while val[j][i] > 2:
         want = val[j][i] - 1
-        i, j = next(n for n in neighbors8(i, j, cols, rows) if val[n[1]][n[0]] == want)
+        i, j = next(n for n in neighbors(i, j, cols, rows) if val[n[1]][n[0]] == want)
         path.append((i, j))
     return path                          # already ordered start -> goal
 `,

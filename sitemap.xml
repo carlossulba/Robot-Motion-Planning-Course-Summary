@@ -4,28 +4,16 @@
     <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/</loc>
   </url>
   <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/bug1.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/bug2.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/tangent-bug.html</loc>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/bug-algorithms.html</loc>
   </url>
   <url>
     <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/potential-field.html</loc>
   </url>
   <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/brushfire.html</loc>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/grid-based-planners.html</loc>
   </url>
   <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/wavefront.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/visibility-graph.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/gvd.html</loc>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/roadmaps.html</loc>
   </url>
   <url>
     <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/trapezoidal.html</loc>

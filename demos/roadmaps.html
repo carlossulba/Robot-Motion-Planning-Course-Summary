@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmaps — Interactive Demos | Robot Motion Planning</title>
+<meta name="description" content="Visibility Graph and the Generalized Voronoi Diagram roadmap compared side by side on the exact same obstacles, start, and goal.">
+<link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/roadmaps.html">
+<meta property="og:title" content="Roadmaps — Interactive Demos">
+<meta property="og:description" content="Visibility Graph and the Generalized Voronoi Diagram roadmap compared side by side on the exact same obstacles, start, and goal.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/roadmaps.html">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="../index.html">Motion<span>Planning</span></a>
+    <nav class="topnav">
+      <a href="../index.html#bug-algorithms">Bug Algorithms</a>
+      <a href="../index.html#potential-functions">Potential Functions</a>
+      <a href="../index.html#grid-based-planners">Grid-Based Planners</a>
+      <a href="../index.html#roadmaps">Roadmaps</a>
+      <a href="../index.html#cell-decompositions">Cell Decompositions</a>
+      <a href="../index.html#sampling-based">Sampling-Based Algorithms</a>
+    </nav>
+    <button class="theme-toggle" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<main class="page page-wide">
+  <div class="kicker"><a href="../index.html#roadmaps">&larr; Roadmaps</a></div>
+  <h1>Roadmaps</h1>
+  <p class="lede">The Visibility Graph and the Generalized Voronoi Diagram roadmap, run against the exact same obstacles, start, and goal so the two roadmap styles are directly comparable.</p>
+
+  <div class="shared-instance-bar">
+    <button class="viz-btn primary" id="btn-shared-gen">🎲 Generate new (all panels)</button>
+    <span class="note">Regenerates one shared obstacle world for both panels below. Each panel's own Step / Play / Reset re-runs only that algorithm against the current world.</span>
+  </div>
+
+  <h2 id="visibilitygraph" class="panel-anchor-heading">Visibility Graph <span class="badge book">§5.1 / book §5.1</span></h2>
+  <p class="algo-desc">Nodes = start, goal, and every obstacle vertex. Edges connect any two nodes with a clear line of sight. Shortest path via Dijkstra.</p>
+  <div id="viz-visibilitygraph"></div>
+
+  <h2 id="gvd" class="panel-anchor-heading">Generalized Voronoi Diagram (roadmap) <span class="badge book">§5.2 / book §5.2</span></h2>
+  <p class="algo-desc">Extracted from the Brushfire distance transform, then used as a roadmap: depart start, search the skeleton, arrive at goal.</p>
+  <div id="viz-gvd"></div>
+</main>
+
+<footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
+
+<script src="../js/common.js"></script>
+<script src="../js/viz/viz-core.js"></script>
+<script src="../js/viz/world.js"></script>
+<script src="../js/viz/gridflood.js"></script>
+<script src="../js/viz/brushfire.js"></script>
+<script src="../js/viz/visibilitygraph.js"></script>
+<script src="../js/viz/gvd.js"></script>
+<script>
+  (function () {
+    var W = 480, H = 320;
+    var seed = (Math.random() * 1e9) | 0;
+
+    function buildWorld(s) {
+      return RMP.makeWorld(RMP.mulberry32(s), { width: W, height: H, nObstacles: 3 + Math.floor(Math.random() * 3), polygonsOnly: true, maxR: 30, cellSize: 6 });
+    }
+
+    var world = buildWorld(seed);
+
+    var handles = [
+      RMP.mountViz(document.getElementById("viz-visibilitygraph"), Object.assign({}, RMP.vizDefs.visibilitygraph, { world: world })),
+      RMP.mountViz(document.getElementById("viz-gvd"), Object.assign({}, RMP.vizDefs.gvd, { world: world })),
+    ];
+
+    document.getElementById("btn-shared-gen").addEventListener("click", function () {
+      seed = (Math.random() * 1e9) | 0;
+      world = buildWorld(seed);
+      handles.forEach(function (h) { h.setWorld(world); });
+    });
+  })();
+</script>
+</body>
+</html>

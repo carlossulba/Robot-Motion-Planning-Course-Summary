@@ -5,9 +5,12 @@
 
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
+  // pseudocode line indices (0-based) -- see vizDefs.bug1.pseudocode below
+  const L_TO_GOAL = 0, L_HIT = 1, L_CIRCUMNAV = 2, L_RETURN = 3, L_LEAVE = 4, L_NO_PATH = 6, L_REACHED = 7;
+
   function computeBug1(world) {
     const STEP = 4, EPS = 3;
-    const events = [{ x: world.start.x, y: world.start.y, phase: "start", note: "Start at q<sub>start</sub>, heading straight for q<sub>goal</sub> along the m-line." }];
+    const events = [{ x: world.start.x, y: world.start.y, phase: "start", line: L_TO_GOAL, note: "Start at q<sub>start</sub>, heading straight for q<sub>goal</sub> along the m-line." }];
     let pos = { x: world.start.x, y: world.start.y };
     const visited = new Set();
     let guard = 0, totalPerimeterUsed = 0;
@@ -16,21 +19,21 @@
       const toGoal = { x: world.goal.x - pos.x, y: world.goal.y - pos.y };
       const d = Math.hypot(toGoal.x, toGoal.y);
       if (d < STEP) {
-        events.push({ x: world.goal.x, y: world.goal.y, phase: "reached", note: "Reached q<sub>goal</sub> — path complete." });
+        events.push({ x: world.goal.x, y: world.goal.y, phase: "reached", line: L_REACHED, note: "Reached q<sub>goal</sub> — path complete." });
         return { events, success: true };
       }
       const dir = { x: toGoal.x / d, y: toGoal.y / d };
       const next = { x: pos.x + dir.x * STEP, y: pos.y + dir.y * STEP };
       if (world.isFree(next.x, next.y)) {
         pos = next;
-        events.push({ x: pos.x, y: pos.y, phase: "to_goal", note: "Motion-to-goal: moving straight toward q<sub>goal</sub>." });
+        events.push({ x: pos.x, y: pos.y, phase: "to_goal", line: L_TO_GOAL, note: "Motion-to-goal: moving straight toward q<sub>goal</sub>." });
         continue;
       }
       const qH = { x: pos.x, y: pos.y };
-      events.push({ x: qH.x, y: qH.y, phase: "hit", note: "Hit point q<sub>H</sub> — obstacle detected. Circumnavigate the entire boundary once." });
+      events.push({ x: qH.x, y: qH.y, phase: "hit", line: L_HIT, note: "Hit point q<sub>H</sub> — obstacle detected. Circumnavigate the entire boundary once." });
       const obs = world.nearestObstacle(next.x, next.y);
       if (!obs || visited.has(obs)) {
-        events.push({ x: qH.x, y: qH.y, phase: "stuck", note: "Re-hit an already-fully-circled obstacle with no progress — no path exists." });
+        events.push({ x: qH.x, y: qH.y, phase: "stuck", line: L_NO_PATH, note: "Re-hit an already-fully-circled obstacle with no progress — no path exists." });
         return { events, success: false };
       }
       visited.add(obs);
@@ -38,28 +41,28 @@
       let qL = boundary[0], minD = Infinity, leaveIdx = 0;
       boundary.forEach((p, i) => { const dd = dist(p, world.goal); if (dd < minD) { minD = dd; qL = p; leaveIdx = i; } });
       for (let i = 1; i < boundary.length; i++) {
-        events.push({ x: boundary[i].x, y: boundary[i].y, phase: "circumnav", note: "Circumnavigating — recording distance-to-goal at every boundary point." });
+        events.push({ x: boundary[i].x, y: boundary[i].y, phase: "circumnav", line: L_CIRCUMNAV, note: "Circumnavigating — recording distance-to-goal at every boundary point." });
         totalPerimeterUsed += STEP;
       }
-      events.push({ x: qL.x, y: qL.y, phase: "found", note: "Full loop complete: q<sub>L</sub> is the boundary point closest to q<sub>goal</sub> seen during the loop." });
+      events.push({ x: qL.x, y: qL.y, phase: "found", line: L_RETURN, note: "Full loop complete: q<sub>L</sub> is the boundary point closest to q<sub>goal</sub> seen during the loop." });
       // retrace via whichever direction is actually shorter, not always forward
       const forwardSteps = leaveIdx;
       const backwardSteps = boundary.length - 1 - leaveIdx;
       if (backwardSteps < forwardSteps) {
         for (let i = boundary.length - 2; i >= leaveIdx; i--) {
-          events.push({ x: boundary[i].x, y: boundary[i].y, phase: "return", note: "Retracing the boundary (shorter direction) back to the leave point q<sub>L</sub>." });
+          events.push({ x: boundary[i].x, y: boundary[i].y, phase: "return", line: L_RETURN, note: "Retracing the boundary (shorter direction) back to the leave point q<sub>L</sub>." });
           totalPerimeterUsed += STEP;
         }
       } else {
         for (let i = 1; i <= leaveIdx; i++) {
-          events.push({ x: boundary[i].x, y: boundary[i].y, phase: "return", note: "Retracing the boundary back to the leave point q<sub>L</sub>." });
+          events.push({ x: boundary[i].x, y: boundary[i].y, phase: "return", line: L_RETURN, note: "Retracing the boundary back to the leave point q<sub>L</sub>." });
           totalPerimeterUsed += STEP;
         }
       }
       pos = { x: qL.x, y: qL.y };
-      events.push({ x: pos.x, y: pos.y, phase: "leave", note: "At leave point q<sub>L</sub> — resume straight-line motion toward q<sub>goal</sub>." });
+      events.push({ x: pos.x, y: pos.y, phase: "leave", line: L_LEAVE, note: "At leave point q<sub>L</sub> — resume straight-line motion toward q<sub>goal</sub>." });
     }
-    events.push({ x: pos.x, y: pos.y, phase: "stuck", note: "Iteration limit reached." });
+    events.push({ x: pos.x, y: pos.y, phase: "stuck", line: L_NO_PATH, note: "Iteration limit reached." });
     return { events, success: false };
   }
 
@@ -109,24 +112,24 @@
     ctx.restore();
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeBugWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
-    const { events, success } = computeBug1(world);
+  function makeSim({ rng, width, height, world }) {
+    const w = world || makeBugWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
+    const { events, success } = computeBug1(w);
     let idx = 0;
     return {
-      draw(ctx) { draw(ctx, world, events, idx); },
+      draw(ctx) { draw(ctx, w, events, idx); },
       step() {
         idx = Math.min(idx + 1, events.length - 1);
         const done = idx >= events.length - 1;
         let note = events[idx].note;
         if (done) {
           const L = pathLength(events.slice(0, idx + 1));
-          const d0 = dist(world.start, world.goal);
+          const d0 = dist(w.start, w.goal);
           note += success
             ? ` Total path length ≈ ${L.toFixed(0)}px vs. straight-line d(q<sub>start</sub>,q<sub>goal</sub>) ≈ ${d0.toFixed(0)}px.`
             : "";
         }
-        return { done, note };
+        return { done, note, line: events[idx].line };
       },
     };
   }
@@ -137,13 +140,23 @@
     title: "Bug1",
     badge: "§3.2 / book §2.1",
     subtitle: "Exhaustive strategy: circle the whole obstacle once, remember the best exit point, then retrace to it.",
-    width: 560, height: 360,
+    width: 480, height: 320,
     legend: [
       { color: "#2b6cb0", label: "motion-to-goal" },
       { color: "#b7532c", label: "circumnavigate" },
       { color: "#8a5a2c", label: "retrace to q_L" },
       { color: "#2f8f5b", label: "leave / reached" },
       { color: "#c23b3b", label: "hit point / stuck" },
+    ],
+    pseudocode: [
+      "move toward q_goal along the m-line",
+      "if hit an obstacle boundary:",
+      { text: "circumnavigate the ENTIRE boundary, tracking distance-to-goal", indent: 1 },
+      { text: "return to q_L = boundary point closest to goal", indent: 1 },
+      { text: "resume motion-to-goal from q_L", indent: 1 },
+      "if q_L -> q_goal re-intersects the same obstacle:",
+      { text: "report: no path exists", indent: 1 },
+      "if q_goal reached: done",
     ],
     makeSim,
     pythonCode: `

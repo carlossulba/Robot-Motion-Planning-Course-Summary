@@ -6,34 +6,34 @@
   "use strict";
   const { makeWorld } = window.RMP;
 
-  const XI = 1.1, ETA = 2200, RHO0 = 55, DSTAR = 90;
+  const RHO0 = 55, DSTAR = 90;
 
-  function Uatt(p, goal) {
+  function Uatt(p, goal, xi) {
     const d = Math.hypot(p.x - goal.x, p.y - goal.y);
-    return d <= DSTAR ? 0.5 * XI * d * d : DSTAR * XI * d - 0.5 * XI * DSTAR * DSTAR;
+    return d <= DSTAR ? 0.5 * xi * d * d : DSTAR * xi * d - 0.5 * xi * DSTAR * DSTAR;
   }
 
-  function Urep(p, world) {
+  function Urep(p, world, eta) {
     let u = 0;
     for (const o of world.obstacles) {
       const d = o.type === "circle"
         ? Math.max(0.001, Math.hypot(p.x - o.cx, p.y - o.cy) - o.r)
         : Math.max(0.001, window.RMP.geom.distToPoly(p.x, p.y, o.pts));
-      if (d < RHO0) u += 0.5 * ETA * Math.pow(1 / d - 1 / RHO0, 2);
+      if (d < RHO0) u += 0.5 * eta * Math.pow(1 / d - 1 / RHO0, 2);
     }
     return Math.min(u, 4000);
   }
 
-  function U(p, world) { return Uatt(p, world.goal) + Urep(p, world); }
+  function U(p, world, xi, eta) { return Uatt(p, world.goal, xi) + Urep(p, world, eta); }
 
-  function numGrad(p, world) {
+  function numGrad(p, world, xi, eta) {
     const h = 1.5;
-    const dx = (U({ x: p.x + h, y: p.y }, world) - U({ x: p.x - h, y: p.y }, world)) / (2 * h);
-    const dy = (U({ x: p.x, y: p.y + h }, world) - U({ x: p.x, y: p.y - h }, world)) / (2 * h);
+    const dx = (U({ x: p.x + h, y: p.y }, world, xi, eta) - U({ x: p.x - h, y: p.y }, world, xi, eta)) / (2 * h);
+    const dy = (U({ x: p.x, y: p.y + h }, world, xi, eta) - U({ x: p.x, y: p.y - h }, world, xi, eta)) / (2 * h);
     return { x: dx, y: dy, mag: Math.hypot(dx, dy) };
   }
 
-  function computePath(world) {
+  function computePath(world, xi, eta) {
     const STEP = 4;
     const events = [{ x: world.start.x, y: world.start.y, note: "Start. The robot follows −∇U(q) (steepest descent) at every step." }];
     let pos = { x: world.start.x, y: world.start.y };
@@ -41,7 +41,7 @@
     while (guard++ < 900) {
       const d = Math.hypot(pos.x - world.goal.x, pos.y - world.goal.y);
       if (d < STEP * 1.3) { events.push({ x: world.goal.x, y: world.goal.y, phase: "reached", note: "Reached q<sub>goal</sub> — global minimum of U found." }); return { events, success: true }; }
-      const g = numGrad(pos, world);
+      const g = numGrad(pos, world, xi, eta);
       if (g.mag < 0.06) {
         stallCount++;
         if (stallCount > 3) { events.push({ x: pos.x, y: pos.y, phase: "stuck", note: "∇U ≈ 0 here but this isn't q<sub>goal</sub> — stuck in a local minimum, the classic failure mode of potential fields." }); return { events, success: false }; }
@@ -56,13 +56,13 @@
     return { events, success: false };
   }
 
-  function buildHeatmap(world) {
+  function buildHeatmap(world, xi, eta) {
     const cell = 9;
     const cols = Math.ceil(world.width / cell), rows = Math.ceil(world.height / cell);
     const vals = new Float32Array(cols * rows);
     let max = 0;
     for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-      const v = Math.log(1 + U({ x: (i + 0.5) * cell, y: (j + 0.5) * cell }, world));
+      const v = Math.log(1 + U({ x: (i + 0.5) * cell, y: (j + 0.5) * cell }, world, xi, eta));
       vals[j * cols + i] = v;
       if (v > max) max = v;
     }
@@ -115,13 +115,15 @@
     ctx.restore();
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
-    const heat = buildHeatmap(world);
-    const { events, success } = computePath(world);
+  function makeSim({ rng, params, width, height, world }) {
+    const xi = (params && params.xi) || 1.1;
+    const eta = (params && params.eta) || 2200;
+    const w = world || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
+    const heat = buildHeatmap(w, xi, eta);
+    const { events, success } = computePath(w, xi, eta);
     let idx = 0;
     return {
-      draw(ctx) { draw(ctx, world, heat, events, idx); },
+      draw(ctx) { draw(ctx, w, heat, events, idx); },
       step() {
         idx = Math.min(idx + 1, events.length - 1);
         const done = idx >= events.length - 1;
@@ -143,6 +145,10 @@
       { color: "rgb(59,110,160)", label: "low potential" },
       { color: "rgb(193,60,60)", label: "high potential (near obstacle)" },
       { color: "#ffffff", label: "descent path" },
+    ],
+    params: [
+      { key: "xi", label: "attractive gain ξ", type: "range", min: 0.3, max: 3, step: 0.1, value: 1.1 },
+      { key: "eta", label: "repulsive gain η", type: "range", min: 400, max: 6000, step: 100, value: 2200 },
     ],
     makeSim,
     pythonCode: `

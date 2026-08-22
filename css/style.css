@@ -381,14 +381,81 @@ section.chapter[id] { scroll-margin-top: 76px; }
 .viz-head h4 { margin: 0; color: var(--text); text-transform: none; letter-spacing: 0; font-size: 1rem; font-weight: 700; }
 .viz-head .badge { text-transform: none; }
 
+.viz-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0;
+}
+
 .viz-stage {
   position: relative;
   padding: 0.6rem 1.2rem 0;
   display: flex;
+  flex: 1 1 auto;
   justify-content: center;
   background:
     linear-gradient(var(--bg-inset) 1px, transparent 1px) 0 0 / 100% 24px,
     var(--bg-inset);
+}
+
+/* ---------- Pseudocode side panel ---------- */
+
+.viz-pseudocode {
+  flex: 1 1 240px;
+  min-width: 220px;
+  max-width: 360px;
+  margin: 0.6rem 1.2rem 0 0;
+  padding: 0.7rem 0.85rem;
+  background: var(--code-bg);
+  color: var(--code-text);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.viz-pseudocode-title {
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-bottom: 0.45rem;
+  font-family: var(--font-sans);
+}
+
+.viz-pseudocode-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: pcline;
+}
+
+.viz-pseudocode-list li {
+  position: relative;
+  counter-increment: pcline;
+  padding: 0.2rem 1.4rem 0.2rem 1.7rem;
+  border-radius: 4px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+.viz-pseudocode-list li::before {
+  content: counter(pcline);
+  position: absolute;
+  left: 0.15rem;
+  color: var(--code-comment);
+  font-size: 0.85em;
+}
+.viz-pseudocode-list li.active {
+  background: rgba(111, 168, 220, 0.18);
+  color: #fff;
+}
+.viz-pseudocode-list li.active::after {
+  content: "\2192";
+  position: absolute;
+  right: 0.35rem;
+  color: var(--code-keyword);
+  font-weight: 700;
 }
 
 .viz-stage canvas {
@@ -481,6 +548,33 @@ section.chapter[id] { scroll-margin-top: 76px; }
 }
 .viz-params label { display: flex; align-items: center; gap: 0.4rem; }
 .viz-params input[type="range"] { accent-color: var(--accent); }
+
+/* ---------- Chapter comparison pages (shared-world control bar) ---------- */
+
+.shared-instance-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 0.9rem 1.2rem;
+  margin: 1.2rem 0 0.4rem;
+}
+
+.shared-instance-bar .note {
+  color: var(--text-dim);
+  font-size: 0.86rem;
+}
+
+.panel-anchor-heading {
+  font-size: 1.02rem;
+  margin: 2.2rem 0 -0.6rem;
+  color: var(--text-dim);
+  scroll-margin-top: 76px;
+}
 
 /* Footer */
 .site-footer {

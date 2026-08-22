@@ -7,20 +7,38 @@
        title, badge, subtitle,
        width, height,               // canvas size in CSS px
        legend: [{color, label}],
-       params: [{key,label,type:'range',min,max,step,value}],
+       params: [{key,label,type:'range'|'checkbox',min,max,step,value}],
+       pseudocode: ["line one", {text:"nested line", indent:1}, ...],
+       world: sharedWorldObject,    // optional: use this pre-built world
+                                     // instead of generating one internally
+                                     // (see world.js makeWorld/makeBugWorld).
+                                     // When supplied, this panel's own
+                                     // "Generate new" button is hidden --
+                                     // the page that owns the shared
+                                     // instance drives it instead via the
+                                     // returned handle's setWorld(world).
        pythonCode: `...`,
-       makeSim({rng, params, width, height}) {
+       makeSim({rng, params, width, height, world}) {
          return {
            draw(ctx) { ... },              // render current state
-           step() { ... ; return {done, note}; } // advance one atomic step
+           step() { ... ; return {done, note, line}; } // advance one atomic
+                                            // step; `line` (optional) is the
+                                            // 0-based index into `pseudocode`
+                                            // currently executing, highlighted
+                                            // in the pseudocode panel.
          };
        }
      });
 
-   The core owns: canvas + DPI scaling, Step/Play/Pause/Reset/
-   Generate-new buttons, a speed slider, a status line, a
-   collapsible Python listing, and a seeded RNG so "Generate new"
-   is reproducible-but-varied while Step/Play never re-randomize.
+   mountViz returns { rebuild, canvas, ctx, setWorld } -- a page that owns a
+   shared world instance across several panels calls setWorld(newWorld) on
+   every panel's handle to re-seed and re-render them all in lockstep.
+
+   The core owns: canvas + DPI scaling, an optional pseudocode side panel
+   with live line-highlighting, Step/Play/Pause/Reset/Generate-new buttons,
+   a speed slider, a status line, a collapsible Python listing, and a seeded
+   RNG so "Generate new" is reproducible-but-varied while Step/Play never
+   re-randomize.
    =========================================================== */
 
 (function (global) {
@@ -61,7 +79,11 @@
       root.appendChild(sub);
     }
 
-    // ---- stage ----
+    // ---- stage + pseudocode panel ----
+    // If def.pseudocode is supplied, the canvas and a pseudocode listing sit
+    // side by side (flex-wrap), so the panel drops below the canvas on
+    // narrow viewports for free.
+    const body = el("div", "viz-body");
     const stage = el("div", "viz-stage");
     const canvas = document.createElement("canvas");
     canvas.width = width * dpr;
@@ -71,7 +93,33 @@
     const ctx = canvas.getContext("2d");
     ctx.scale(dpr, dpr);
     stage.appendChild(canvas);
-    root.appendChild(stage);
+    body.appendChild(stage);
+
+    let pcListEl = null;
+    if (def.pseudocode && def.pseudocode.length) {
+      const pcPanel = el("div", "viz-pseudocode");
+      pcPanel.appendChild(el("div", "viz-pseudocode-title", "Pseudocode"));
+      pcListEl = el("ol", "viz-pseudocode-list");
+      def.pseudocode.forEach((line) => {
+        const text = typeof line === "string" ? line : line.text;
+        const indent = typeof line === "object" && line.indent ? line.indent : 0;
+        const li = el("li", "pc-line", null);
+        li.textContent = text;
+        if (indent) li.style.paddingLeft = (1.6 + indent * 1.1) + "em";
+        pcListEl.appendChild(li);
+      });
+      pcPanel.appendChild(pcListEl);
+      body.appendChild(pcPanel);
+    }
+    root.appendChild(body);
+
+    function highlightLine(lineIdx) {
+      if (!pcListEl) return;
+      const items = pcListEl.children;
+      for (let i = 0; i < items.length; i++) {
+        items[i].classList.toggle("active", i === lineIdx);
+      }
+    }
 
     // ---- legend ----
     if (def.legend && def.legend.length) {
@@ -91,19 +139,31 @@
       def.params.forEach((p) => {
         paramValues[p.key] = p.value;
         const label = el("label");
-        const valSpan = el("span", null, String(p.value));
-        label.appendChild(document.createTextNode(p.label + " "));
-        const input = document.createElement("input");
-        input.type = "range";
-        input.min = p.min; input.max = p.max; input.step = p.step || 1;
-        input.value = p.value;
-        input.addEventListener("input", () => {
-          paramValues[p.key] = parseFloat(input.value);
-          valSpan.textContent = input.value;
-          rebuild(currentSeed);
-        });
-        label.appendChild(input);
-        label.appendChild(valSpan);
+        if (p.type === "checkbox") {
+          label.appendChild(document.createTextNode(p.label + " "));
+          const input = document.createElement("input");
+          input.type = "checkbox";
+          input.checked = !!p.value;
+          input.addEventListener("change", () => {
+            paramValues[p.key] = input.checked;
+            rebuild(currentSeed);
+          });
+          label.appendChild(input);
+        } else {
+          const valSpan = el("span", null, String(p.value));
+          label.appendChild(document.createTextNode(p.label + " "));
+          const input = document.createElement("input");
+          input.type = "range";
+          input.min = p.min; input.max = p.max; input.step = p.step || 1;
+          input.value = p.value;
+          input.addEventListener("input", () => {
+            paramValues[p.key] = parseFloat(input.value);
+            valSpan.textContent = input.value;
+            rebuild(currentSeed);
+          });
+          label.appendChild(input);
+          label.appendChild(valSpan);
+        }
         paramsBar.appendChild(label);
       });
       root.appendChild(paramsBar);
@@ -118,7 +178,12 @@
     controls.appendChild(btnStep);
     controls.appendChild(btnPlay);
     controls.appendChild(btnReset);
-    controls.appendChild(btnGen);
+    // In shared-world mode (def.world supplied), the page that mounted this
+    // panel owns the single "Generate new" control for the whole page --
+    // this panel's own button would generate a different instance than its
+    // siblings, breaking the side-by-side comparison, so it's hidden.
+    const sharedWorldMode = !!def.world;
+    if (!sharedWorldMode) controls.appendChild(btnGen);
     controls.appendChild(el("span", "viz-spacer"));
     const speedWrap = el("div", "viz-speed");
     speedWrap.appendChild(document.createTextNode("speed"));
@@ -152,6 +217,7 @@
     let playing = false;
     let timer = null;
     let currentSeed = (Math.random() * 1e9) | 0;
+    let currentWorld = def.world || null;
     let stepCount = 0;
     let done = false;
 
@@ -164,10 +230,19 @@
       playing = false;
       clearInterval(timer);
       btnPlay.textContent = "▶ Play";
-      sim = def.makeSim({ rng: rng(), params: paramValues, width, height });
+      sim = def.makeSim({ rng: rng(), params: paramValues, width, height, world: currentWorld });
+      highlightLine(-1);
       redraw();
       setStatus("Press <strong>Step</strong> or <strong>Play</strong> to begin.");
       setButtons();
+    }
+
+    // Called by a page-level "Generate new" control on shared-world pages:
+    // swaps in a freshly generated world (same instance for every panel on
+    // the page) and re-runs this panel's algorithm against it from scratch.
+    function setWorld(newWorld) {
+      currentWorld = newWorld;
+      rebuild(currentSeed);
     }
 
     function redraw() {
@@ -187,6 +262,7 @@
       const res = sim.step() || {};
       stepCount++;
       redraw();
+      highlightLine(typeof res.line === "number" ? res.line : -1);
       const prefix = `<strong>Step ${stepCount}.</strong> `;
       setStatus(prefix + (res.note || ""));
       if (res.done) {
@@ -232,7 +308,7 @@
 
     rebuild(currentSeed);
 
-    return { rebuild, canvas, ctx };
+    return { rebuild, canvas, ctx, setWorld };
   }
 
   global.RMP = global.RMP || {};
