@@ -68,8 +68,8 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeNarrowPassageWorld(rng, { width, height });
+  function makeSim({ rng, width, height, world: sharedWorld }) {
+    const world = sharedWorld || makeNarrowPassageWorld(rng, { width, height });
     const ATTEMPTS = 140, STD = 22;
     const data = computeGaussian(world, rng, ATTEMPTS, STD);
     let idx = -1;

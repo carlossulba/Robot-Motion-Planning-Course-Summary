@@ -179,6 +179,17 @@
         grid[j * cols + i] = (!inBounds(x, y) || pointInObstacle(x, y)) ? 1 : 0;
       }
     }
+    // Force the full outer ring of grid cells to be blocked, symmetrically on
+    // all four edges. The pixel-based `inBounds` check above (a fixed 2px
+    // margin) only reliably blocks the far edges -- ceil()'d grid dimensions
+    // mean column cols-1 / row rows-1 always overflow past width-2/height-2 --
+    // while column 0 / row 0 (cell centers at cellSize/2, comfortably inside
+    // the margin for any realistic cellSize) never do. That asymmetry left
+    // Brushfire/GVD seeding "fire" from the bottom/right boundary but not the
+    // top/left, so this ring is set explicitly instead of relying on the
+    // pixel margin lining up with the cell grid.
+    for (let i = 0; i < cols; i++) { grid[i] = 1; grid[(rows - 1) * cols + i] = 1; }
+    for (let j = 0; j < rows; j++) { grid[j * cols] = 1; grid[j * cols + (cols - 1)] = 1; }
     return { cols, rows, grid };
   }
 

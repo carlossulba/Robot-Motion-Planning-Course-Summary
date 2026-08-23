@@ -16,33 +16,12 @@
     <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/roadmaps.html</loc>
   </url>
   <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/trapezoidal.html</loc>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/cell-decompositions.html</loc>
   </url>
   <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/boustrophedon.html</loc>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/sampling-based.html</loc>
   </url>
   <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/quadtree.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/prm.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/rrt.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/rrt-star.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/gaussian-sampler.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/bridge-test.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/gvd-retraction.html</loc>
-  </url>
-  <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/visibility-sampling.html</loc>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/other-sampling-strategies.html</loc>
   </url>
 </urlset>

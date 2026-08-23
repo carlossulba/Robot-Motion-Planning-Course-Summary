@@ -130,98 +130,100 @@
 
   <section id="cell-decompositions" class="chapter">
     <h2>7 &middot; Cell Decompositions</h2>
+    <p class="chapter-sub-intro">Trapezoidal, Boustrophedon, and Quadtree decomposition now share one page and one obstacle instance so the three decomposition styles are directly comparable.</p>
     <div class="algo-grid">
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/trapezoidal.html">Trapezoidal Decomposition</a></h3>
+          <h3><a href="demos/cell-decompositions.html#trapezoidal">Trapezoidal Decomposition</a></h3>
           <span class="badge book">§7.1 / book §6.1</span>
         </div>
         <p class="algo-desc"><em>A vertical line is extended from every obstacle vertex, slicing free space into trapezoids. Path = adjacency-graph search + centroid/midpoint connectors.</em></p>
-        <a class="btn" href="demos/trapezoidal.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/cell-decompositions.html#trapezoidal">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/boustrophedon.html">Boustrophedon (Morse) Decomposition</a></h3>
+          <h3><a href="demos/cell-decompositions.html#boustrophedon">Boustrophedon (Morse) Decomposition</a></h3>
           <span class="badge book">§7.2 / book §6.2</span>
         </div>
         <p class="algo-desc"><em>A slab boundary is only placed where the number of free-space intervals actually changes — far coarser than trapezoidal decomposition.</em></p>
-        <a class="btn" href="demos/boustrophedon.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/cell-decompositions.html#boustrophedon">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/quadtree.html">Quadtree Decomposition</a></h3>
+          <h3><a href="demos/cell-decompositions.html#quadtree">Quadtree Decomposition</a></h3>
           <span class="badge book">§7.4 / book §6.2</span>
         </div>
         <p class="algo-desc"><em>Recursively split a mixed region into 4 quadrants until each leaf is uniformly free or uniformly occupied — an approximate decomposition.</em></p>
-        <a class="btn" href="demos/quadtree.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/cell-decompositions.html#quadtree">Try it live &rarr;</a>
       </article>
     </div>
   </section>
 
   <section id="sampling-based" class="chapter">
     <h2>8 &middot; Sampling-Based Algorithms</h2>
+    <p class="chapter-sub-intro">PRM, RRT, and RRT* now share one page and one obstacle instance so the three sampling strategies are directly comparable.</p>
     <div class="algo-grid">
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/prm.html">PRM (Probabilistic Roadmap)</a></h3>
+          <h3><a href="demos/sampling-based.html#prm">PRM (Probabilistic Roadmap)</a></h3>
           <span class="badge book">§8.3.1 / book §7.1</span>
         </div>
         <p class="algo-desc"><em>Sample free milestones, connect each to its k nearest neighbors, then search the resulting graph.</em></p>
-        <a class="btn" href="demos/prm.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/sampling-based.html#prm">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/rrt.html">RRT (Rapidly-Exploring Random Tree)</a></h3>
+          <h3><a href="demos/sampling-based.html#rrt">RRT (Rapidly-Exploring Random Tree)</a></h3>
           <span class="badge book">§8.5.1 / book §7.2.2</span>
         </div>
         <p class="algo-desc"><em>Grow a tree from q_start: sample a point, extend from the nearest tree node by a fixed step, keep it if collision-free.</em></p>
-        <a class="btn" href="demos/rrt.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/sampling-based.html#rrt">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/rrt-star.html">RRT*</a></h3>
+          <h3><a href="demos/sampling-based.html#rrtstar">RRT*</a></h3>
           <span class="badge book">§8.5.3 / book §7.2.2</span>
         </div>
         <p class="algo-desc"><em>RRT plus rewiring: every new node picks the lowest-cost nearby parent, and can steal nearby nodes from the tree if that shortens their path.</em></p>
-        <a class="btn" href="demos/rrt-star.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/sampling-based.html#rrtstar">Try it live &rarr;</a>
       </article>
     </div>
 
     <section id="other-sampling-strategies" class="chapter-sub">
       <h3>Other Sampling Strategies</h3>
-      <p class="chapter-sub-intro">Narrow-passage sampling heuristics — biasing where milestones land so a roadmap can actually find its way through thin gaps.</p>
+      <p class="chapter-sub-intro">Narrow-passage sampling heuristics — biasing where milestones land so a roadmap can actually find its way through thin gaps. These four now share one page and one narrow-passage world instance so the heuristics are directly comparable.</p>
       <div class="algo-grid">
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/gaussian-sampler.html">Gaussian Sampler</a></h3>
+          <h3><a href="demos/other-sampling-strategies.html#gaussian-sampler">Gaussian Sampler</a></h3>
           <span class="badge book">narrow-passage sampling</span>
         </div>
         <p class="algo-desc"><em>Sample q1 uniformly, q2 at a Gaussian offset from q1; keep the free one as a milestone only if exactly one of the pair is in collision.</em></p>
-        <a class="btn" href="demos/gaussian-sampler.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/other-sampling-strategies.html#gaussian-sampler">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/bridge-test.html">Bridge Test</a></h3>
+          <h3><a href="demos/other-sampling-strategies.html#bridge-test">Bridge Test</a></h3>
           <span class="badge book">narrow-passage sampling</span>
         </div>
         <p class="algo-desc"><em>Sample two colliding configurations; keep their midpoint as a milestone only if the midpoint itself is collision-free.</em></p>
-        <a class="btn" href="demos/bridge-test.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/other-sampling-strategies.html#bridge-test">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/gvd-retraction.html">GVD-Retraction Sampling</a></h3>
+          <h3><a href="demos/other-sampling-strategies.html#gvd-retraction">GVD-Retraction Sampling</a></h3>
           <span class="badge book">narrow-passage sampling</span>
         </div>
         <p class="algo-desc"><em>Sample a raw configuration, then retract it toward the nearest point of the Generalized Voronoi Diagram — the max-clearance skeleton that runs through every passage.</em></p>
-        <a class="btn" href="demos/gvd-retraction.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/other-sampling-strategies.html#gvd-retraction">Try it live &rarr;</a>
       </article>
       <article class="algo-card">
         <div class="algo-card-head">
-          <h3><a href="demos/visibility-sampling.html">Visibility-Based Sampling</a></h3>
+          <h3><a href="demos/other-sampling-strategies.html#visibility-sampling">Visibility-Based Sampling</a></h3>
           <span class="badge book">narrow-passage sampling</span>
         </div>
         <p class="algo-desc"><em>Keep a candidate milestone only if it sees a useful amount of free space not already visible from the existing roadmap (estimated on a coarse grid).</em></p>
-        <a class="btn" href="demos/visibility-sampling.html">Try it live &rarr;</a>
+        <a class="btn" href="demos/other-sampling-strategies.html#visibility-sampling">Try it live &rarr;</a>
       </article>
       </div>
     </section>

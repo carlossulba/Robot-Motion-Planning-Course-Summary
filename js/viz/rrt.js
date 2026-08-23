@@ -96,8 +96,8 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
+  function makeSim({ rng, width, height, world: sharedWorld }) {
+    const world = sharedWorld || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
     const data = computeRRT(world, rng);
     let idx = -1;
     const total = data.events.length;

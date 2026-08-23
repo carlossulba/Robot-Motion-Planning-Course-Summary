@@ -103,8 +103,8 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeNarrowPassageWorld(rng, { width, height, wallThickness: 30 });
+  function makeSim({ rng, width, height, world: sharedWorld }) {
+    const world = sharedWorld || makeNarrowPassageWorld(rng, { width, height, wallThickness: 30 });
     const ATTEMPTS = 260, STD = 18;
     const data = computeBridge(world, rng, ATTEMPTS, STD);
     let idx = -1;

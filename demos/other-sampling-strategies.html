@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Other Sampling Strategies — Interactive Demos | Robot Motion Planning</title>
+<meta name="description" content="Gaussian Sampler, Bridge Test, GVD-Retraction, and Visibility-Based Sampling compared side by side on the exact same narrow-passage world.">
+<link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/other-sampling-strategies.html">
+<meta property="og:title" content="Other Sampling Strategies — Interactive Demos">
+<meta property="og:description" content="Gaussian Sampler, Bridge Test, GVD-Retraction, and Visibility-Based Sampling compared side by side on the exact same narrow-passage world.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/other-sampling-strategies.html">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="../index.html">Motion<span>Planning</span></a>
+    <nav class="topnav">
+      <a href="../index.html#bug-algorithms">Bug Algorithms</a>
+      <a href="../index.html#potential-functions">Potential Functions</a>
+      <a href="../index.html#grid-based-planners">Grid-Based Planners</a>
+      <a href="../index.html#roadmaps">Roadmaps</a>
+      <a href="../index.html#cell-decompositions">Cell Decompositions</a>
+      <a href="../index.html#sampling-based">Sampling-Based Algorithms</a>
+    </nav>
+    <button class="theme-toggle" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<main class="page page-wide">
+  <div class="kicker"><a href="../index.html#other-sampling-strategies">&larr; Other Sampling Strategies</a></div>
+  <h1>Other Sampling Strategies</h1>
+  <p class="lede">Narrow-passage sampling heuristics — Gaussian Sampler, Bridge Test, GVD-Retraction, and Visibility-Based Sampling — run against the exact same narrow-passage world so the four heuristics are directly comparable.</p>
+
+  <div class="shared-instance-bar">
+    <button class="viz-btn primary" id="btn-shared-gen">🎲 Generate new (all panels)</button>
+    <span class="note">Regenerates one shared narrow-passage world for all four panels below. Each panel's own Step / Play / Reset re-runs only that sampling strategy against the current world.</span>
+  </div>
+
+  <h2 id="gaussian-sampler" class="panel-anchor-heading">Gaussian Sampler <span class="badge book">narrow-passage sampling</span></h2>
+  <p class="algo-desc">Sample q1 uniformly, q2 at a Gaussian offset from q1; keep the free one as a milestone only if exactly one of the pair is in collision.</p>
+  <div id="viz-gaussiansampler"></div>
+
+  <h2 id="bridge-test" class="panel-anchor-heading">Bridge Test <span class="badge book">narrow-passage sampling</span></h2>
+  <p class="algo-desc">Sample two colliding configurations; keep their midpoint as a milestone only if the midpoint itself is collision-free.</p>
+  <div id="viz-bridgetest"></div>
+
+  <h2 id="gvd-retraction" class="panel-anchor-heading">GVD-Retraction Sampling <span class="badge book">narrow-passage sampling</span></h2>
+  <p class="algo-desc">Sample a raw configuration, then retract it toward the nearest point of the Generalized Voronoi Diagram — the max-clearance skeleton that runs through every passage.</p>
+  <div id="viz-gvdretraction"></div>
+
+  <h2 id="visibility-sampling" class="panel-anchor-heading">Visibility-Based Sampling <span class="badge book">narrow-passage sampling</span></h2>
+  <p class="algo-desc">Keep a candidate milestone only if it sees a useful amount of free space not already visible from the existing roadmap (estimated on a coarse grid).</p>
+  <div id="viz-visibilitysampling"></div>
+</main>
+
+<footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
+
+<script src="../js/common.js"></script>
+<script src="../js/viz/viz-core.js"></script>
+<script src="../js/viz/world.js"></script>
+<script src="../js/viz/gridflood.js"></script>
+<script src="../js/viz/brushfire.js"></script>
+<script src="../js/viz/gvd.js"></script>
+<script src="../js/viz/gaussiansampler.js"></script>
+<script src="../js/viz/bridgetest.js"></script>
+<script src="../js/viz/gvdretraction.js"></script>
+<script src="../js/viz/visibilitysampling.js"></script>
+<script>
+  (function () {
+    var W = 560, H = 360;
+    var seed = (Math.random() * 1e9) | 0;
+
+    function buildWorld(s) {
+      return RMP.makeNarrowPassageWorld(RMP.mulberry32(s), { width: W, height: H });
+    }
+
+    var world = buildWorld(seed);
+
+    var handles = [
+      RMP.mountViz(document.getElementById("viz-gaussiansampler"), Object.assign({}, RMP.vizDefs.gaussiansampler, { world: world })),
+      RMP.mountViz(document.getElementById("viz-bridgetest"), Object.assign({}, RMP.vizDefs.bridgetest, { world: world })),
+      RMP.mountViz(document.getElementById("viz-gvdretraction"), Object.assign({}, RMP.vizDefs.gvdretraction, { world: world })),
+      RMP.mountViz(document.getElementById("viz-visibilitysampling"), Object.assign({}, RMP.vizDefs.visibilitysampling, { world: world })),
+    ];
+
+    document.getElementById("btn-shared-gen").addEventListener("click", function () {
+      seed = (Math.random() * 1e9) | 0;
+      world = buildWorld(seed);
+      handles.forEach(function (h) { h.setWorld(world); });
+    });
+  })();
+</script>
+</body>
+</html>

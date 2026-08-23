@@ -63,11 +63,14 @@
   }
 
   function draw(ctx, world, data, phase, brushfireRings, cellsRevealed, showConnectors, showPath) {
-    if (phase === "brushfire") {
-      brushfireCore.draw(ctx, world, data.brushfire.layers, data.brushfire.gvd, brushfireRings, false);
-      return;
-    }
-    world.draw(ctx, { alpha: 0.9 });
+    // Always render the Brushfire ring coloring first -- fully revealed once
+    // we're past the replay phase -- and layer the GVD skeleton on top of it.
+    // The ring/heatmap coloring must stay visible throughout, not get wiped
+    // the moment GVD marking starts.
+    const bfRevealed = phase === "brushfire" ? brushfireRings : data.brushfire.layers.length;
+    brushfireCore.draw(ctx, world, data.brushfire.layers, data.brushfire.gvd, bfRevealed, false);
+    if (phase === "brushfire") return;
+
     ctx.save();
     ctx.fillStyle = "#b7532c";
     for (let k = 0; k < cellsRevealed; k++) {
@@ -112,23 +115,23 @@
     const w = world || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), cellSize: 6 });
     const data = computeGvd(w, conn);
     const bfRings = data.brushfire.layers.length;
-    const revealStep = Math.max(1, Math.floor(data.gvdCells.length / 60));
-    const cellSteps = Math.ceil(data.gvdCells.length / revealStep);
     let idx = 0;
     // phase A: bfRings steps replaying the Brushfire propagation
-    // phase B: cellSteps steps revealing the GVD skeleton extracted from it
+    // phase B: 1 step revealing the whole GVD skeleton at once (a single
+    //          completed pass, mirroring how Brushfire's own reveal batches
+    //          a whole ring per step rather than cell-by-cell)
     // phase C: 1 step showing start/goal connectors
     // phase D: 1 step showing the searched max-clearance path
-    const total = bfRings + cellSteps + 2;
+    const total = bfRings + 3;
 
     return {
       draw(ctx) {
         if (idx <= bfRings) {
           draw(ctx, w, data, "brushfire", idx, 0, false, false);
         } else {
-          const skIdx = idx - bfRings;
-          const cellsRevealed = Math.min(skIdx * revealStep, data.gvdCells.length);
-          draw(ctx, w, data, "gvd", 0, cellsRevealed, skIdx >= cellSteps, skIdx >= cellSteps + 1);
+          const skIdx = idx - bfRings; // 1 = marked, 2 = connectors, 3 = path
+          const cellsRevealed = skIdx >= 1 ? data.gvdCells.length : 0;
+          draw(ctx, w, data, "gvd", 0, cellsRevealed, skIdx >= 2, skIdx >= 3);
         }
       },
       step() {
@@ -142,10 +145,10 @@
           line = idx === 1 ? L_INIT : L_PROPAGATE;
         } else {
           const skIdx = idx - bfRings;
-          if (skIdx < cellSteps) {
-            note = `Marking GVD cells where two distinct waves met at equal value (${Math.min(skIdx * revealStep, data.gvdCells.length)} of ${data.gvdCells.length}).`;
+          if (skIdx === 1) {
+            note = `Marking all ${data.gvdCells.length} GVD cells at once — free cells where two distinct waves met at equal value.`;
             line = L_MARK;
-          } else if (skIdx === cellSteps) {
+          } else if (skIdx === 2) {
             note = "Skeleton complete. Connect q_start and q_goal to their nearest GVD point.";
             line = L_CONNECT;
           } else {

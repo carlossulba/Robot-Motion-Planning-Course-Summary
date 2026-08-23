@@ -45,7 +45,7 @@
           next.push(...children);
         } else {
           const finalCls = cls === "mixed" ? "occupied" : cls; // conservative at resolution limit
-          const leaf = { ...r, cls: finalCls, id: leaves.length };
+          const leaf = { ...r, cls: finalCls, wasMixed: cls === "mixed", id: leaves.length };
           leaves.push(leaf);
           events.push({ type: "leaf", leaf });
         }
@@ -133,29 +133,43 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
-    const data = buildQuadtree(world);
+  // pseudocode line indices (0-based)
+  const L_ROOT = 0, L_STOP = 1, L_SPLIT = 3, L_LIMIT = 4, L_SEARCH = 5;
+
+  function makeSim({ rng, width, height, world }) {
+    const w = world || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
+    const data = buildQuadtree(w);
     const leafEventCount = data.events.length;
     let idx = 0;
     const total = leafEventCount + 1;
     return {
-      draw(ctx) { draw(ctx, world, data, Math.min(idx, leafEventCount), idx >= leafEventCount); },
+      draw(ctx) { draw(ctx, w, data, Math.min(idx, leafEventCount), idx >= leafEventCount); },
       step() {
         idx = Math.min(idx + 1, total);
         const done = idx >= total;
         const e = data.events[Math.min(idx, leafEventCount) - 1];
-        let note;
+        let note, line;
+        if (idx === 1) {
+          line = L_ROOT;
+        } else if (e && e.type === "split") {
+          line = L_SPLIT;
+        } else if (e && e.type === "leaf") {
+          line = e.leaf.wasMixed ? L_LIMIT : L_STOP;
+        } else {
+          line = L_SEARCH;
+        }
         if (idx < leafEventCount) {
           note = e && e.type === "split"
             ? (e.cls === "mixed" ? "Region is mixed (both free and occupied) — split into 4 quadrants." : "Still coarse — split into 4 quadrants to resolve more detail.")
             : `Region is uniformly ${e ? e.leaf.cls : ""} — stop subdividing, keep as a leaf.`;
         } else if (idx === leafEventCount) {
           note = `Quadtree complete: ${data.leaves.filter((l) => l.cls === "free").length} free leaves, ${data.leaves.filter((l) => l.cls === "occupied").length} occupied. Locating start/goal leaves and searching the adjacency graph.`;
+          line = L_SEARCH;
         } else {
           note = data.path ? `Path found through ${data.path.length} leaves.` : "q_start and q_goal fall in disconnected regions — no path found at this resolution.";
+          line = L_SEARCH;
         }
-        return { done, note };
+        return { done, note, line };
       },
     };
   }
@@ -171,6 +185,14 @@
       { color: "rgba(47,143,91,0.35)", label: "free leaf" },
       { color: "rgba(66,72,82,0.7)", label: "occupied leaf" },
       { color: "#2f8f5b", label: "path via leaf centroids" },
+    ],
+    pseudocode: [
+      "start with one cell covering the whole free space",
+      "if a cell is fully free or fully occupied: stop splitting it",
+      "if a cell is mixed (partly free, partly occupied):",
+      { text: "split it into 4 equal quadrants, recurse on each", indent: 1 },
+      "stop recursing at a resolution limit even if still mixed",
+      "search the resulting free-cell adjacency graph",
     ],
     makeSim,
     pythonCode: `

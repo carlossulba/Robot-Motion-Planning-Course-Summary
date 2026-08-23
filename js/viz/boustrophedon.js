@@ -159,24 +159,34 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), polygonsOnly: true, maxR: 28 });
-    const data = computeBoustrophedon(world);
+  // pseudocode line indices (0-based)
+  const L_SWEEP = 0, L_CRITICAL = 1, L_GRAPH = 4, L_SEARCH = 5;
+
+  function makeSim({ rng, width, height, world }) {
+    const w = world || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), polygonsOnly: true, maxR: 28 });
+    const data = computeBoustrophedon(w);
     let idx = 0;
     const total = data.slabs.length + 2;
     return {
       draw(ctx) {
         const slabsRevealed = Math.min(idx, data.slabs.length);
-        draw(ctx, world, data, slabsRevealed, idx >= data.slabs.length, idx >= data.slabs.length + 1);
+        draw(ctx, w, data, slabsRevealed, idx >= data.slabs.length, idx >= data.slabs.length + 1);
       },
       step() {
         idx = Math.min(idx + 1, total);
         const done = idx >= total;
-        let note;
-        if (idx < data.slabs.length) note = `Slab ${idx} of ${data.slabs.length} (only ${data.nCritical} critical points found — far fewer than one per vertex).`;
-        else if (idx === data.slabs.length) note = "Decomposition complete. Locate the cell containing q_start and the one containing q_goal.";
-        else note = data.route ? `Path found through ${data.route.length + 1} cells — typically fewer, larger cells than trapezoidal decomposition of the same scene.` : "q_start and q_goal ended up in disconnected cells — no path exists.";
-        return { done, note };
+        let note, line;
+        if (idx < data.slabs.length) {
+          note = `Slab ${idx} of ${data.slabs.length} (only ${data.nCritical} critical points found — far fewer than one per vertex).`;
+          line = idx === 1 ? L_SWEEP : L_CRITICAL;
+        } else if (idx === data.slabs.length) {
+          note = "Decomposition complete. Locate the cell containing q_start and the one containing q_goal.";
+          line = L_GRAPH;
+        } else {
+          note = data.route ? `Path found through ${data.route.length + 1} cells — typically fewer, larger cells than trapezoidal decomposition of the same scene.` : "q_start and q_goal ended up in disconnected cells — no path exists.";
+          line = L_SEARCH;
+        }
+        return { done, note, line };
       },
     };
   }
@@ -192,6 +202,14 @@
       { color: "rgba(183,83,44,0.5)", label: "cell" },
       { color: "#b7532c", label: "start/goal cell centroid" },
       { color: "#2f8f5b", label: "resulting path" },
+    ],
+    pseudocode: [
+      "sweep a vertical line left to right",
+      "insert a boundary only at a CRITICAL POINT",
+      { text: "(where connectivity changes: interval appears, disappears, splits, or merges)", indent: 1 },
+      "between critical points, sweep each cell back-and-forth (coverage-ready)",
+      "build adjacency graph over the coarser cell set",
+      "connect start/goal to their cell, search graph",
     ],
     makeSim,
     pythonCode: `

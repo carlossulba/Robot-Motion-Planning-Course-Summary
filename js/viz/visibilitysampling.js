@@ -114,8 +114,8 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeNarrowPassageWorld(rng, { width, height });
+  function makeSim({ rng, width, height, world: sharedWorld }) {
+    const world = sharedWorld || makeNarrowPassageWorld(rng, { width, height });
     const ATTEMPTS = 90, SPACING = 20, COVERAGE_THRESH = 0.55;
     const data = computeVisibilitySampling(world, rng, ATTEMPTS, SPACING, COVERAGE_THRESH);
     let idx = -1;

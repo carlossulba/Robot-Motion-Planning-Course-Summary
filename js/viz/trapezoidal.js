@@ -157,24 +157,34 @@
     world.drawMarker(ctx, world.goal.x, world.goal.y, "#2f8f5b", "goal");
   }
 
-  function makeSim({ rng, width, height }) {
-    const world = makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), polygonsOnly: true, maxR: 28 });
-    const data = computeTrapezoids(world);
+  // pseudocode line indices (0-based)
+  const L_SWEEP = 0, L_CELL = 3, L_GRAPH = 4, L_SEARCH = 5;
+
+  function makeSim({ rng, width, height, world }) {
+    const w = world || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3), polygonsOnly: true, maxR: 28 });
+    const data = computeTrapezoids(w);
     let idx = 0;
     const total = data.slabs.length + 2;
     return {
       draw(ctx) {
         const slabsRevealed = Math.min(idx, data.slabs.length);
-        draw(ctx, world, data, slabsRevealed, idx >= data.slabs.length, idx >= data.slabs.length + 1);
+        draw(ctx, w, data, slabsRevealed, idx >= data.slabs.length, idx >= data.slabs.length + 1);
       },
       step() {
         idx = Math.min(idx + 1, total);
         const done = idx >= total;
-        let note;
-        if (idx < data.slabs.length) note = `Slab ${idx} of ${data.slabs.length}: vertical extensions dropped from each vertex slice this strip into trapezoids.`;
-        else if (idx === data.slabs.length) note = "Decomposition complete. Locate the trapezoid containing q_start and the one containing q_goal.";
-        else note = data.route ? `Path found through ${data.route.length + 1} adjacent trapezoids, connecting centroids via the shared-edge midpoints.` : "q_start and q_goal ended up in disconnected trapezoids — no path exists.";
-        return { done, note };
+        let note, line;
+        if (idx < data.slabs.length) {
+          note = `Slab ${idx} of ${data.slabs.length}: vertical extensions dropped from each vertex slice this strip into trapezoids.`;
+          line = idx === 1 ? L_SWEEP : L_CELL;
+        } else if (idx === data.slabs.length) {
+          note = "Decomposition complete. Locate the trapezoid containing q_start and the one containing q_goal.";
+          line = L_GRAPH;
+        } else {
+          note = data.route ? `Path found through ${data.route.length + 1} adjacent trapezoids, connecting centroids via the shared-edge midpoints.` : "q_start and q_goal ended up in disconnected trapezoids — no path exists.";
+          line = L_SEARCH;
+        }
+        return { done, note, line };
       },
     };
   }
@@ -190,6 +200,14 @@
       { color: "rgba(111,168,220,0.5)", label: "trapezoid cell" },
       { color: "#b7532c", label: "start/goal cell centroid" },
       { color: "#2f8f5b", label: "resulting path" },
+    ],
+    pseudocode: [
+      "sweep a vertical line left to right",
+      "at each obstacle vertex, extend a vertical segment",
+      { text: "up/down until it hits another edge or the boundary", indent: 1 },
+      "each resulting strip (trapezoid or triangle) is one cell",
+      "build adjacency graph: edge iff cells share a vertical boundary",
+      "connect start/goal to their cell's extension midpoint, search graph",
     ],
     makeSim,
     pythonCode: `
