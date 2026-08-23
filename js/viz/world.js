@@ -623,5 +623,10 @@
   global.RMP.makeWorld = makeWorld;
   global.RMP.makeBugWorld = makeBugWorld;
   global.RMP.makeNarrowPassageWorld = makeNarrowPassageWorld;
+  // Exposed so page-local world generators (e.g. potentialfield.js's deliberate
+  // horseshoe-trap layout) can build a fully-featured world object (isFree,
+  // draw, distToNearestObstacle, ...) from a hand-placed obstacle/start/goal
+  // set without duplicating this bookkeeping.
+  global.RMP.finishWorld = finishWorld;
   global.RMP.geom = { pointInPoly, distToSeg, distToPoly, traceObstacleBoundary, segmentIntersectsPoly };
 })(window);

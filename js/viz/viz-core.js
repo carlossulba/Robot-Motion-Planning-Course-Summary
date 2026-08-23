@@ -7,8 +7,16 @@
        title, badge, subtitle,
        width, height,               // canvas size in CSS px
        legend: [{color, label}],
-       params: [{key,label,type:'range'|'checkbox',min,max,step,value}],
+       params: [{key,label,type:'range'|'checkbox'|'select',min,max,step,value,
+                  scale:'log' (optional, range only -- huge multiplicative
+                  spans without a huge linear slider), format (optional,
+                  range only -- (value)=>string for the readout),
+                  options:[{value,label}] (select only)}],
        pseudocode: ["line one", {text:"nested line", indent:1}, ...],
+       sidePanel: {title} (optional) -- like pseudocode's panel, but its body
+                  is set from sim.sidePanelHTML (a string) on every (re)build,
+                  for content that depends on live param values instead of a
+                  fixed line list (e.g. a formula readout).
        world: sharedWorldObject,    // optional: use this pre-built world
                                      // instead of generating one internally
                                      // (see world.js makeWorld/makeBugWorld).
@@ -111,6 +119,28 @@
       pcPanel.appendChild(pcListEl);
       body.appendChild(pcPanel);
     }
+
+    // Optional side panel with content that changes as params change (e.g. a
+    // formula readout) rather than def.pseudocode's static line list -- opt-in
+    // via def.sidePanel = {title}. Reuses the pseudocode panel's visual style.
+    // makeSim's returned sim object may set `sidePanelHTML` (a string); it's
+    // pushed into this panel every time the sim is (re)built, i.e. on every
+    // param change, Reset, and Generate new.
+    let sidePanelBodyEl = null;
+    if (def.sidePanel) {
+      const panel = el("div", "viz-pseudocode viz-formula-panel");
+      panel.style.fontFamily = "var(--font-sans)";
+      panel.appendChild(el("div", "viz-pseudocode-title", def.sidePanel.title || "Formula"));
+      sidePanelBodyEl = el("div", "viz-formula-body");
+      // This panel reuses .viz-pseudocode's always-dark code-block background
+      // (var(--code-bg) is intentionally the same dark shade in both themes),
+      // so its text must use the code-block foreground tokens, not the
+      // page-theme-dependent var(--text)/var(--text-dim) -- those flip to a
+      // dark color in light mode and would go dark-on-dark here.
+      sidePanelBodyEl.style.cssText = "font-size:0.86rem;line-height:1.85;color:var(--code-text);";
+      panel.appendChild(sidePanelBodyEl);
+      body.appendChild(panel);
+    }
     root.appendChild(body);
 
     function highlightLine(lineIdx) {
@@ -149,16 +179,49 @@
             rebuild(currentSeed);
           });
           label.appendChild(input);
+        } else if (p.type === "select") {
+          label.appendChild(document.createTextNode(p.label + " "));
+          const select = document.createElement("select");
+          select.className = "viz-select";
+          select.style.cssText = "background:var(--bg-inset);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:0.15rem 0.3rem;font:inherit;";
+          (p.options || []).forEach((opt) => {
+            const o = document.createElement("option");
+            o.value = opt.value;
+            o.textContent = opt.label;
+            if (opt.value === p.value) o.selected = true;
+            select.appendChild(o);
+          });
+          select.addEventListener("change", () => {
+            paramValues[p.key] = select.value;
+            rebuild(currentSeed);
+          });
+          label.appendChild(select);
         } else {
-          const valSpan = el("span", null, String(p.value));
+          // Opt-in log scale (p.scale === "log"): the underlying <input> travels
+          // linearly over log10(value) so a huge multiplicative range (needed
+          // when a parameter's real-world effect compresses non-linearly, e.g.
+          // a repulsive gain whose influence shrinks with the cube root of its
+          // value) still fits a normal-feeling drag, while the label always
+          // shows the true value the sim receives, not the raw slider position.
+          const isLog = p.scale === "log";
+          const format = p.format || ((v) => (Math.abs(v) >= 1000 ? Math.round(v).toLocaleString() : (Math.round(v * 100) / 100).toString()));
+          const valSpan = el("span", null, format(p.value));
           label.appendChild(document.createTextNode(p.label + " "));
           const input = document.createElement("input");
           input.type = "range";
-          input.min = p.min; input.max = p.max; input.step = p.step || 1;
-          input.value = p.value;
+          if (isLog) {
+            input.min = Math.log10(p.min); input.max = Math.log10(p.max);
+            input.step = p.step || (Math.log10(p.max) - Math.log10(p.min)) / 200;
+            input.value = Math.log10(p.value);
+          } else {
+            input.min = p.min; input.max = p.max; input.step = p.step || 1;
+            input.value = p.value;
+          }
           input.addEventListener("input", () => {
-            paramValues[p.key] = parseFloat(input.value);
-            valSpan.textContent = input.value;
+            const raw = parseFloat(input.value);
+            const val = isLog ? Math.pow(10, raw) : raw;
+            paramValues[p.key] = val;
+            valSpan.textContent = format(val);
             rebuild(currentSeed);
           });
           label.appendChild(input);
@@ -231,6 +294,7 @@
       clearInterval(timer);
       btnPlay.textContent = "▶ Play";
       sim = def.makeSim({ rng: rng(), params: paramValues, width, height, world: currentWorld });
+      if (sidePanelBodyEl) sidePanelBodyEl.innerHTML = sim.sidePanelHTML || "";
       highlightLine(-1);
       redraw();
       setStatus("Press <strong>Step</strong> or <strong>Play</strong> to begin.");
