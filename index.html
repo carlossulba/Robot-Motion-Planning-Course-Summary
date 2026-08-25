@@ -180,6 +180,38 @@
         <p class="algo-desc"><em>RRT plus rewiring: every new node picks the lowest-cost nearby parent, and can steal nearby nodes from the tree if that shortens their path.</em></p>
         <a class="btn" href="demos/sampling-based.html#rrtstar">Try it live &rarr;</a>
       </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/sampling-based.html#obprm">OBPRM (Obstacle-Based PRM)</a></h3>
+          <span class="badge book">§8.3.2 / book §7.1</span>
+        </div>
+        <p class="algo-desc"><em>Bias milestones toward obstacle surfaces: find a colliding seed, walk to a free point, binary-search the boundary between them.</em></p>
+        <a class="btn" href="demos/sampling-based.html#obprm">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/sampling-based.html#est">EST (Expansive-Spaces Trees)</a></h3>
+          <span class="badge book">§8.4.2 / book §7.2.1</span>
+        </div>
+        <p class="algo-desc"><em>Grow a tree by picking sparsely-covered nodes to expand from, keeping a nearby candidate only if a local planner connects it back.</em></p>
+        <a class="btn" href="demos/sampling-based.html#est">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/sampling-based.html#sbl">SBL (Single-query, Bi-directional, Lazy)</a></h3>
+          <span class="badge book">§8.4.2 / book §7.2.3</span>
+        </div>
+        <p class="algo-desc"><em>Two EST-style trees grow with unverified edges; only when start and goal trees touch is the whole candidate path checked for collisions.</em></p>
+        <a class="btn" href="demos/sampling-based.html#sbl">Try it live &rarr;</a>
+      </article>
+      <article class="algo-card">
+        <div class="algo-card-head">
+          <h3><a href="demos/sampling-based.html#srt">SRT (Sampling-Based Roadmap of Trees)</a></h3>
+          <span class="badge book">§8.6 / book §7.2.1</span>
+        </div>
+        <p class="algo-desc"><em>Grow several small trees from random roots, then connect nearby trees with the same tree planner — merging into one roadmap wherever two trees touch.</em></p>
+        <a class="btn" href="demos/sampling-based.html#srt">Try it live &rarr;</a>
+      </article>
     </div>
 
     <section id="other-sampling-strategies" class="chapter-sub">

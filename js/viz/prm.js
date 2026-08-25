@@ -1,8 +1,17 @@
 /* PRM visualization: sample free milestones, connect each to its k nearest
-   neighbors with a collision-free local planner, then search the roadmap. */
+   neighbors with a collision-free local planner, then search the roadmap.
+
+   Every candidate is shown before it's resolved: a hollow gold marker for a
+   just-sampled point (or a dashed gold line for a just-proposed edge), then
+   the very next step either solidifies it (accepted) or flashes it red
+   (rejected) before moving on -- so the accept/reject decision is visible,
+   not just its outcome. */
 (function () {
   "use strict";
   const { makeWorld } = window.RMP;
+
+  const CANDIDATE = "#e2b06a";
+  const REJECT = "#c23b3b";
 
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
   function segmentFree(world, a, b, step) {
@@ -14,15 +23,30 @@
     }
     return true;
   }
+  function randPt(world, rng) {
+    return { x: world.margin * 0.3 + rng() * (world.width - world.margin * 0.6), y: world.margin * 0.3 + rng() * (world.height - world.margin * 0.6) };
+  }
 
-  function computePRM(world, N, k) {
+  // pseudocode line indices (0-based) -- see vizDefs.prm.pseudocode below
+  const L_SAMPLE = 0, L_NEIGHBORS = 1, L_ATTEMPT = 2, L_ADD_EDGE = 3, L_DENSE = 4, L_QUERY = 5;
+
+  function computePRM(world, rng, N, k) {
     const milestones = [];
+    const events = [];
     let attempts = 0;
     while (milestones.length < N && attempts < N * 8) {
       attempts++;
-      const p = { x: world.margin * 0.3 + Math.random() * (world.width - world.margin * 0.6), y: world.margin * 0.3 + Math.random() * (world.height - world.margin * 0.6) };
-      if (world.isFree(p.x, p.y, 2)) milestones.push(p);
+      const p = randPt(world, rng);
+      events.push({ type: "candidate", pt: p, line: L_SAMPLE });
+      if (world.isFree(p.x, p.y, 2)) {
+        milestones.push(p);
+        events.push({ type: "accept", pt: p, line: L_SAMPLE, milestoneIdx: milestones.length - 1 });
+      } else {
+        events.push({ type: "reject", pt: p, line: L_SAMPLE });
+      }
     }
+    events.push({ type: "dense", line: L_DENSE });
+
     const nodes = [{ ...world.start }, { ...world.goal }, ...milestones];
     const edgeSet = new Set();
     const edges = [];
@@ -32,10 +56,14 @@
       others.forEach(([j, w]) => {
         const key = i < j ? `${i}-${j}` : `${j}-${i}`;
         if (edgeSet.has(key)) return;
+        edgeSet.add(key);
+        events.push({ type: "edge-candidate", a: i, b: j, line: L_ATTEMPT });
         if (segmentFree(world, n, nodes[j])) {
-          edgeSet.add(key);
           edges.push([i, j, w]);
           adj[i].push([j, w]); adj[j].push([i, w]);
+          events.push({ type: "edge-accept", a: i, b: j, edgeIdx: edges.length - 1, line: L_ADD_EDGE });
+        } else {
+          events.push({ type: "edge-reject", a: i, b: j, line: L_ADD_EDGE });
         }
       });
     });
@@ -51,30 +79,75 @@
     }
     let path = null;
     if (dd[1] < Infinity) { path = [1]; let c = 1; while (c !== 0) { c = prev[c]; path.push(c); } path.reverse(); }
+    events.push({ type: "search", line: L_QUERY });
 
-    return { nodes, milestones, edges, path, pathLen: dd[1] };
+    // prefix counts so draw() can render cumulative accepted state in O(1)
+    const milestoneCountAt = new Array(events.length);
+    const edgeCountAt = new Array(events.length);
+    let mc = 0, ec = 0;
+    events.forEach((e, i) => {
+      if (e.type === "accept") mc++;
+      if (e.type === "edge-accept") ec++;
+      milestoneCountAt[i] = mc; edgeCountAt[i] = ec;
+    });
+
+    return { nodes, milestones, edges, path, pathLen: dd[1], events, milestoneCountAt, edgeCountAt, N };
   }
 
-  function draw(ctx, world, data, milestonesRevealed, edgesRevealed, showPath) {
+  function draw(ctx, world, data, idx) {
     world.draw(ctx, { alpha: 0.9 });
+    const mRev = idx >= 0 ? data.milestoneCountAt[idx] : 0;
+    const eRev = idx >= 0 ? data.edgeCountAt[idx] : 0;
+
     ctx.save();
     ctx.strokeStyle = "rgba(111,168,220,0.5)";
     ctx.lineWidth = 1;
-    for (let k = 0; k < edgesRevealed && k < data.edges.length; k++) {
+    for (let k = 0; k < eRev; k++) {
       const [i, j] = data.edges[k];
       ctx.beginPath(); ctx.moveTo(data.nodes[i].x, data.nodes[i].y); ctx.lineTo(data.nodes[j].x, data.nodes[j].y); ctx.stroke();
     }
     ctx.restore();
+
     ctx.fillStyle = "#6a4fb0";
-    for (let k = 0; k < milestonesRevealed && k < data.milestones.length; k++) {
+    for (let k = 0; k < mRev; k++) {
       const p = data.milestones[k];
       ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill();
     }
-    if (showPath && data.path) {
+
+    const cur = idx >= 0 ? data.events[idx] : null;
+    if (cur) {
+      if (cur.type === "candidate") {
+        ctx.save();
+        ctx.setLineDash([2, 2]); ctx.strokeStyle = CANDIDATE; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(cur.pt.x, cur.pt.y, 5, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      } else if (cur.type === "reject") {
+        ctx.save();
+        ctx.strokeStyle = REJECT; ctx.lineWidth = 1.8;
+        const r = 5;
+        ctx.beginPath(); ctx.moveTo(cur.pt.x - r, cur.pt.y - r); ctx.lineTo(cur.pt.x + r, cur.pt.y + r);
+        ctx.moveTo(cur.pt.x + r, cur.pt.y - r); ctx.lineTo(cur.pt.x - r, cur.pt.y + r); ctx.stroke();
+        ctx.restore();
+      } else if (cur.type === "edge-candidate") {
+        const a = data.nodes[cur.a], b = data.nodes[cur.b];
+        ctx.save();
+        ctx.setLineDash([3, 3]); ctx.strokeStyle = CANDIDATE; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        ctx.restore();
+      } else if (cur.type === "edge-reject") {
+        const a = data.nodes[cur.a], b = data.nodes[cur.b];
+        ctx.save();
+        ctx.setLineDash([3, 3]); ctx.strokeStyle = REJECT; ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    if (idx >= 0 && data.events[idx].type === "search" && data.path) {
       ctx.save();
       ctx.strokeStyle = "#2f8f5b"; ctx.lineWidth = 3;
       ctx.beginPath();
-      data.path.forEach((idx, k) => { const p = data.nodes[idx]; k === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); });
+      data.path.forEach((pIdx, k) => { const p = data.nodes[pIdx]; k === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); });
       ctx.stroke();
       ctx.restore();
     }
@@ -85,24 +158,25 @@
   function makeSim({ rng, width, height, world: sharedWorld }) {
     const world = sharedWorld || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
     const N = 55, k = 6;
-    const data = computePRM(world, N, k);
-    let idx = 0;
-    const mSteps = data.milestones.length, eSteps = data.edges.length;
-    const total = mSteps + eSteps + 1;
+    const data = computePRM(world, rng, N, k);
+    let idx = -1;
+    const total = data.events.length;
     return {
-      draw(ctx) {
-        const mRev = Math.min(idx, mSteps);
-        const eRev = Math.max(0, Math.min(idx - mSteps, eSteps));
-        draw(ctx, world, data, mRev, eRev, idx >= mSteps + eSteps);
-      },
+      draw(ctx) { draw(ctx, world, data, idx); },
       step() {
-        idx = Math.min(idx + 1, total);
-        const done = idx >= total;
+        idx = Math.min(idx + 1, total - 1);
+        const done = idx >= total - 1;
+        const e = data.events[idx];
         let note;
-        if (idx <= mSteps) note = `Sampling milestone ${idx} of ${mSteps} (rejected in-collision samples not shown).`;
-        else if (idx <= mSteps + eSteps) note = `Connecting milestones to their ${k} nearest neighbors — testing straight-line collision (edge ${idx - mSteps} of ${eSteps}).`;
+        if (e.type === "candidate") note = "Sampled a candidate configuration — testing whether it's collision-free.";
+        else if (e.type === "accept") note = `Free — kept as milestone ${e.milestoneIdx + 1} of up to ${data.N}.`;
+        else if (e.type === "reject") note = "In collision — discarded, not added to the roadmap.";
+        else if (e.type === "dense") note = `Roadmap has ${data.milestones.length} milestones — dense enough. Connecting each to its ${k} nearest neighbors next.`;
+        else if (e.type === "edge-candidate") note = "Attempting to connect a candidate pair — testing straight-line collision (local planner).";
+        else if (e.type === "edge-accept") note = "Collision-free — edge added to the roadmap.";
+        else if (e.type === "edge-reject") note = "Blocked by an obstacle — edge discarded.";
         else note = data.path ? `Roadmap complete. Shortest path over the graph ≈ ${data.pathLen.toFixed(0)}px through ${data.path.length} nodes.` : "Roadmap complete, but q_start and q_goal ended up in different components — try Generate new, or imagine adding more milestones.";
-        return { done, note };
+        return { done, note, line: e.line };
       },
     };
   }
@@ -117,7 +191,17 @@
     legend: [
       { color: "#6a4fb0", label: "milestone" },
       { color: "rgba(111,168,220,0.8)", label: "roadmap edge" },
+      { color: CANDIDATE, label: "candidate (untested)" },
+      { color: REJECT, label: "rejected" },
       { color: "#2f8f5b", label: "shortest path" },
+    ],
+    pseudocode: [
+      "sample a random free configuration -> candidate milestone",
+      "find its k-nearest (or radius-based) neighbor milestones",
+      "attempt to connect each candidate pair with a local planner (straight-line collision check)",
+      "add the edge if collision-free",
+      { text: "repeat until the roadmap is “dense enough”", indent: 0 },
+      "query: connect q_start, q_goal to the roadmap, search",
     ],
     makeSim,
     pythonCode: `

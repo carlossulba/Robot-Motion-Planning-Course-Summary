@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sampling-Based Algorithms — Interactive Demos | Robot Motion Planning</title>
-<meta name="description" content="PRM, RRT, and RRT* compared side by side on the exact same obstacles, start, and goal.">
+<meta name="description" content="PRM, RRT, RRT*, OBPRM, EST, SBL, and SRT compared side by side on the exact same obstacles, start, and goal.">
 <link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/sampling-based.html">
 <meta property="og:title" content="Sampling-Based Algorithms — Interactive Demos">
-<meta property="og:description" content="PRM, RRT, and RRT* compared side by side on the exact same obstacles, start, and goal.">
+<meta property="og:description" content="PRM, RRT, RRT*, OBPRM, EST, SBL, and SRT compared side by side on the exact same obstacles, start, and goal.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/sampling-based.html">
 <link rel="stylesheet" href="../css/style.css">
@@ -48,6 +48,22 @@
   <h2 id="rrtstar" class="panel-anchor-heading">RRT* <span class="badge book">§8.5.3 / book §7.2.2</span></h2>
   <p class="algo-desc">RRT plus rewiring: every new node picks the lowest-cost nearby parent, and can steal nearby nodes from the tree if that shortens their path.</p>
   <div id="viz-rrtstar"></div>
+
+  <h2 id="obprm" class="panel-anchor-heading">OBPRM (Obstacle-Based PRM) <span class="badge book">§8.3.2 / book §7.1</span></h2>
+  <p class="algo-desc">Bias milestones toward obstacle surfaces: find a colliding seed, walk to a free point, binary-search the boundary between them.</p>
+  <div id="viz-obprm"></div>
+
+  <h2 id="est" class="panel-anchor-heading">EST (Expansive-Spaces Trees) <span class="badge book">§8.4.2 / book §7.2.1</span></h2>
+  <p class="algo-desc">Grow a tree by picking sparsely-covered nodes to expand from, keeping a nearby candidate only if a local planner connects it back.</p>
+  <div id="viz-est"></div>
+
+  <h2 id="sbl" class="panel-anchor-heading">SBL (Single-query, Bi-directional, Lazy) <span class="badge book">§8.4.2 / book §7.2.3</span></h2>
+  <p class="algo-desc">Two EST-style trees grow with unverified edges; only when start and goal trees touch is the whole candidate path checked for collisions.</p>
+  <div id="viz-sbl"></div>
+
+  <h2 id="srt" class="panel-anchor-heading">SRT (Sampling-Based Roadmap of Trees) <span class="badge book">§8.6 / book §7.2.1</span></h2>
+  <p class="algo-desc">Grow several small trees from random roots, then connect nearby trees with the same tree planner — merging into one roadmap wherever two trees touch.</p>
+  <div id="viz-srt"></div>
 </main>
 
 <footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
@@ -58,6 +74,10 @@
 <script src="../js/viz/prm.js"></script>
 <script src="../js/viz/rrt.js"></script>
 <script src="../js/viz/rrtstar.js"></script>
+<script src="../js/viz/obprm.js"></script>
+<script src="../js/viz/est.js"></script>
+<script src="../js/viz/sbl.js"></script>
+<script src="../js/viz/srt.js"></script>
 <script>
   (function () {
     var W = 560, H = 360;
@@ -73,6 +93,10 @@
       RMP.mountViz(document.getElementById("viz-prm"), Object.assign({}, RMP.vizDefs.prm, { world: world })),
       RMP.mountViz(document.getElementById("viz-rrt"), Object.assign({}, RMP.vizDefs.rrt, { world: world })),
       RMP.mountViz(document.getElementById("viz-rrtstar"), Object.assign({}, RMP.vizDefs.rrtstar, { world: world })),
+      RMP.mountViz(document.getElementById("viz-obprm"), Object.assign({}, RMP.vizDefs.obprm, { world: world })),
+      RMP.mountViz(document.getElementById("viz-est"), Object.assign({}, RMP.vizDefs.est, { world: world })),
+      RMP.mountViz(document.getElementById("viz-sbl"), Object.assign({}, RMP.vizDefs.sbl, { world: world })),
+      RMP.mountViz(document.getElementById("viz-srt"), Object.assign({}, RMP.vizDefs.srt, { world: world })),
     ];
 
     document.getElementById("btn-shared-gen").addEventListener("click", function () {
