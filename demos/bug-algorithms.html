@@ -51,6 +51,7 @@
 
   <h2 id="tangentbug" class="panel-anchor-heading">Tangent Bug <span class="badge book">§3.4 / book §2.2</span></h2>
   <p class="algo-desc">A finite-range radial sensor lets the robot shortcut around obstacles instead of fully committing to boundary-following.</p>
+  <div class="demo-warning"><strong>&#9888; Known issue:</strong> the boundary-following leave condition (d<sub>reach</sub> &lt; d<sub>followed</sub>) currently fires almost immediately in most runs &mdash; measured at 65% of boundary-following episodes leaving within the very first sensed point &mdash; so this demo often behaves like the naive Bug0 strategy above instead of showing genuine sensor-driven shortcutting around an obstacle. A fix is pending.</div>
   <div id="viz-tangentbug"></div>
 </main>
 

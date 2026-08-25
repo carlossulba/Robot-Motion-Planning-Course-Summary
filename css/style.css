@@ -280,6 +280,22 @@ hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 }
 .badge.book { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
 
+/* ---------- Known-issue warning callout ---------- */
+
+.demo-warning {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  background: rgba(194, 59, 59, 0.1);
+  border: 1px solid rgba(194, 59, 59, 0.35);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  margin: 0.5rem 0;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.demo-warning strong { color: #c23b3b; }
+
 /* ---------- Home page: chapter / algorithm link directory ---------- */
 
 section.chapter[id] { scroll-margin-top: 76px; }
