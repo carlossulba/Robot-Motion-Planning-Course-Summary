@@ -56,10 +56,15 @@
   const L_SENSE = 0, L_MOTION = 2, L_LOCALMIN = 4, L_FOLLOW = 6, L_LEAVE = 8, L_REACHED = 9;
 
   function computeTangentBug(world) {
-    const STEP = 4, EPS = 3;
+    const STEP = 4, EPS = 3, H_EPS = 1.5;
     const events = [{ x: world.start.x, y: world.start.y, phase: "start", rays: [], line: L_SENSE, note: "Start at q<sub>start</sub>, equipped with a finite-range radial sensor (dashed circle)." }];
     let pos = { x: world.start.x, y: world.start.y };
     let guard = 0;
+    // h(p) achieved by the previous tangential step -- reset to Infinity every
+    // time we leave tangential motion (straight-line motion-to-goal, or just
+    // left boundary-following), so each new episode gets a fresh baseline.
+    let prevBestH = Infinity;
+    let lastPhase = "start";
 
     while (guard++ < 5000) {
       const distG = dist(pos, world.goal);
@@ -76,26 +81,39 @@
         const next = { x: pos.x + dir.x * STEP, y: pos.y + dir.y * STEP };
         if (world.isFree(next.x, next.y)) {
           pos = next;
+          prevBestH = Infinity;
+          lastPhase = "to_goal";
           events.push({ x: pos.x, y: pos.y, phase: "to_goal", rays: pts, line: L_MOTION, note: "Goal side clear within sensor range — heading straight for q<sub>goal</sub>." });
           continue;
         }
       }
 
-      // blocked within range: steer toward the sensed point minimizing dist(robot,p)+dist(p,goal)
-      const { best } = bestHeuristicPoint(pts, pos, world.goal);
-      const target = best || world.goal;
-      const dir = norm(pos, target);
-      const next = { x: pos.x + dir.x * STEP, y: pos.y + dir.y * STEP };
-      if (world.isFree(next.x, next.y)) {
-        pos = next;
-        events.push({ x: pos.x, y: pos.y, phase: "tangent", rays: pts, line: L_MOTION, note: "Obstacle sensed — heading tangentially toward the sensed point that minimizes heuristic distance to goal." });
-        continue;
+      // blocked within range: steer toward whichever sensed point minimizes
+      // h(p) = dist(robot,p) + dist(p,goal), re-sensing at every step, for as
+      // long as h keeps decreasing -- exactly like the pseudocode below.
+      if (lastPhase !== "tangent") prevBestH = Infinity;
+      const { best, bestH } = bestHeuristicPoint(pts, pos, world.goal);
+      if (best && bestH < prevBestH - H_EPS) {
+        const dir = norm(pos, best);
+        const next = { x: pos.x + dir.x * STEP, y: pos.y + dir.y * STEP };
+        if (world.isFree(next.x, next.y)) {
+          pos = next;
+          prevBestH = bestH;
+          lastPhase = "tangent";
+          events.push({ x: pos.x, y: pos.y, phase: "tangent", rays: pts, line: L_MOTION, note: `Heading toward the sensed point minimizing h(p) = dist(robot,p)+dist(p,goal) &mdash; h is still decreasing (h&asymp;${bestH.toFixed(0)}px).` });
+          continue;
+        }
+        // best point is physically unreachable this step (right at the
+        // boundary) -- can't make further sensor-driven progress either.
       }
 
-      // collision -> enter boundary-following
+      // h(p) stopped decreasing (or no further progress is physically
+      // possible): this is the local minimum -- begin boundary-following,
+      // continuously re-sensing.
       const qH = { x: pos.x, y: pos.y };
-      const obs = world.nearestObstacle(next.x, next.y);
-      events.push({ x: qH.x, y: qH.y, phase: "hit", rays: pts, line: L_LOCALMIN, note: "Reached the obstacle — begin boundary-following, continuously re-sensing." });
+      const obs = world.nearestObstacle(pos.x, pos.y);
+      lastPhase = "hit";
+      events.push({ x: qH.x, y: qH.y, phase: "hit", rays: pts, line: L_LOCALMIN, note: "h(p) stopped decreasing &mdash; local minimum reached. Begin boundary-following, continuously re-sensing." });
       if (!obs) { events.push({ x: qH.x, y: qH.y, phase: "stuck", rays: [], note: "No obstacle found (numerical edge case) — stopping." }); return { events, success: false }; }
 
       const boundary = traceObstacleBoundary(obs, qH, STEP, EPS, Infinity);
@@ -110,6 +128,7 @@
         if (dist(p, world.goal) <= RANGE && lineOfSightClear(world, p, world.goal)) dReach = Math.min(dReach, dist(p, world.goal));
         if (dReach < dFollowedMin - 2) {
           pos = { x: p.x, y: p.y };
+          lastPhase = "leave";
           events.push({ x: pos.x, y: pos.y, phase: "leave", rays: pts2, line: L_LEAVE, note: "d<sub>reach</sub> &lt; d<sub>followed</sub> — a shortcut is now visible. Leave the boundary." });
           left = true;
           break;
@@ -238,13 +257,15 @@
     ],
     makeSim,
     pythonCode: `
-def tangent_bug(start, goal, sense, is_free, range_=95, step=0.05):
+def tangent_bug(start, goal, sense, is_free, range_=95, step=0.05, h_eps=1.5):
     """Tangent Bug: finite-range radial sensor picks the sensed point that
     minimizes heuristic h(p) = dist(robot, p) + dist(p, goal)."""
     pos, path = start, [start]
 
     def line_of_sight_clear(a, b):
         return not any(not is_free(pt) for pt in sample_segment(a, b))
+
+    prev_best_h = float("inf")   # reset whenever a new tangential episode starts
 
     while dist(pos, goal) > step:
         los_end = goal if dist(pos, goal) <= range_ else pos + normalize(goal - pos) * range_
@@ -254,20 +275,27 @@ def tangent_bug(start, goal, sense, is_free, range_=95, step=0.05):
             if is_free(nxt):
                 pos = nxt
                 path.append(pos)
+                prev_best_h = float("inf")                # fresh episode next time we're blocked
                 continue
 
-        sensed = sense(pos, range_)                      # radial scan
+        # --- blocked: keep heading toward whichever sensed point minimizes
+        # h(p), re-sensing every step, for as long as h keeps decreasing ---
+        sensed = sense(pos, range_)                       # radial scan
         target = min(sensed, key=lambda p: dist(pos, p) + dist(p, goal))
-        nxt = pos + normalize(target - pos) * step
-        if is_free(nxt):
-            pos = nxt
-            path.append(pos)
-            continue
+        best_h = dist(pos, target) + dist(target, goal)
+        if best_h < prev_best_h - h_eps:
+            nxt = pos + normalize(target - pos) * step
+            if is_free(nxt):
+                pos = nxt
+                path.append(pos)
+                prev_best_h = best_h
+                continue
 
-        # --- hit: follow boundary, but keep re-sensing for a shortcut ---
+        # --- h(p) stopped decreasing: local minimum -> boundary-following,
+        # still re-sensing at every point for a shortcut ---
         q_hit = pos
         d_followed = dist(q_hit, goal)
-        for p in trace_boundary(nearest_obstacle(nxt), q_hit, step):
+        for p in trace_boundary(nearest_obstacle(pos), q_hit, step):
             path.append(p)
             d_followed = min(d_followed, dist(p, goal))
             sensed = sense(p, range_)
@@ -276,6 +304,7 @@ def tangent_bug(start, goal, sense, is_free, range_=95, step=0.05):
                 d_reach = min(d_reach, dist(p, goal))
             if d_reach < d_followed:
                 pos = p                                    # shortcut found
+                prev_best_h = float("inf")                  # fresh episode next time we're blocked
                 break
         else:
             return None                                    # no shortcut, no path

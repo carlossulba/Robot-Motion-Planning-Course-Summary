@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bug Algorithms — Interactive Demos | Robot Motion Planning</title>
-<meta name="description" content="Bug1, Bug2, and Tangent Bug compared side by side on the exact same obstacle world, start, and goal.">
+<meta name="description" content="Bug0, Bug1, Bug2, and Tangent Bug compared side by side on the exact same obstacle world, start, and goal.">
 <link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/bug-algorithms.html">
 <meta property="og:title" content="Bug Algorithms — Interactive Demos">
-<meta property="og:description" content="Bug1, Bug2, and Tangent Bug compared side by side on the exact same obstacle world, start, and goal.">
+<meta property="og:description" content="Bug0, Bug1, Bug2, and Tangent Bug compared side by side on the exact same obstacle world, start, and goal.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/bug-algorithms.html">
 <link rel="stylesheet" href="../css/style.css">
@@ -37,6 +37,10 @@
     <button class="viz-btn primary" id="btn-shared-gen">🎲 Generate new (all panels)</button>
   </div>
 
+  <h2 id="bug0" class="panel-anchor-heading">Bug0 <span class="badge">§3.1</span></h2>
+  <p class="algo-desc">Naive strategy: head for the goal, and the moment an obstacle blocks the way, follow its boundary only until a straight step toward the goal is locally free again.</p>
+  <div id="viz-bug0"></div>
+
   <h2 id="bug1" class="panel-anchor-heading">Bug1 <span class="badge book">§3.2 / book §2.1</span></h2>
   <p class="algo-desc">Exhaustive strategy: circle the whole obstacle once, remember the best exit point, then retrace to it.</p>
   <div id="viz-bug1"></div>
@@ -55,6 +59,7 @@
 <script src="../js/common.js"></script>
 <script src="../js/viz/viz-core.js"></script>
 <script src="../js/viz/world.js"></script>
+<script src="../js/viz/bug0.js"></script>
 <script src="../js/viz/bug1.js"></script>
 <script src="../js/viz/bug2.js"></script>
 <script src="../js/viz/tangentbug.js"></script>
@@ -70,6 +75,7 @@
     var world = buildWorld(seed);
 
     var handles = [
+      RMP.mountViz(document.getElementById("viz-bug0"), Object.assign({}, RMP.vizDefs.bug0, { world: world })),
       RMP.mountViz(document.getElementById("viz-bug1"), Object.assign({}, RMP.vizDefs.bug1, { world: world })),
       RMP.mountViz(document.getElementById("viz-bug2"), Object.assign({}, RMP.vizDefs.bug2, { world: world })),
       RMP.mountViz(document.getElementById("viz-tangentbug"), Object.assign({}, RMP.vizDefs.tangentbug, { world: world })),
