@@ -15,12 +15,25 @@
   function lineOfSightClear(world, a, b) {
     const d = dist(a, b);
     if (d < 1e-6) return true;
-    const steps = Math.ceil(d / 3);
+    // Fine sampling matters here specifically: right after leaving a
+    // boundary, the ray toward the goal can run nearly tangent to the very
+    // obstacle just circled, grazing a thin sliver of it. A coarser step
+    // (e.g. every 3px) can hop clean over that sliver and report "clear"
+    // when the goal-ward path actually cuts back into the obstacle.
+    const steps = Math.ceil(d / 1);
     for (let i = 1; i < steps; i++) {
       const t = i / steps;
       if (!world.isFree(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)) return false;
     }
     return true;
+  }
+
+  // A single STEP is short, but checking only its destination point (as a
+  // contact-sensor Bug would) can still let it clip a thin obstacle sliver
+  // in between -- same failure mode as lineOfSightClear above, just at
+  // STEP scale instead of sensor-RANGE scale. Check the whole segment.
+  function stepFree(world, a, b) {
+    return world.isFree(b.x, b.y) && lineOfSightClear(world, a, b);
   }
 
   // One point per ray: the obstacle it hits, or the point at full sensor
@@ -79,7 +92,7 @@
       if (lineOfSightClear(world, pos, losEnd)) {
         const dir = norm(pos, world.goal);
         const next = { x: pos.x + dir.x * STEP, y: pos.y + dir.y * STEP };
-        if (world.isFree(next.x, next.y)) {
+        if (stepFree(world, pos, next)) {
           pos = next;
           prevBestH = Infinity;
           lastPhase = "to_goal";
@@ -96,7 +109,7 @@
       if (best && bestH < prevBestH - H_EPS) {
         const dir = norm(pos, best);
         const next = { x: pos.x + dir.x * STEP, y: pos.y + dir.y * STEP };
-        if (world.isFree(next.x, next.y)) {
+        if (stepFree(world, pos, next)) {
           pos = next;
           prevBestH = bestH;
           lastPhase = "tangent";
