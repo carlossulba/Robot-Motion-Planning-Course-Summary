@@ -353,7 +353,7 @@
     ],
     params: [
       { key: "xi", label: "attractive gain ξ", type: "range", scale: "log", min: 0.03, max: 40, value: 1.1 },
-      { key: "eta", label: "repulsive gain η", type: "range", scale: "log", min: 150, max: 150000, value: 2200 },
+      { key: "eta", label: "repulsive gain η", type: "range", scale: "log", min: 150, max: 1500000, value: 2200 },
       {
         key: "attType", label: "U_att shape", type: "select", value: "piecewise",
         options: [
