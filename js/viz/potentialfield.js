@@ -167,6 +167,40 @@
     return { events, success: false };
   }
 
+  // The attractive potential's gradient spans the whole canvas and grows
+  // with distance from the goal, so on the heatmap alone it visually
+  // dominates the color range -- each obstacle's own repulsive bump is
+  // real and correctly centered on that obstacle (see Urep above, which
+  // sums a per-obstacle term keyed on distance to *that* obstacle, not to
+  // the goal), but it's easy to mistake the field for "just distance from
+  // goal" at a glance. This samples world.distToNearestObstacle on a fine
+  // grid and keeps every sample that straddles the ρ0 influence radius
+  // (a sign change vs. a right/down neighbor), producing a dotted contour
+  // that hugs each obstacle's actual footprint -- circle or polygon alike
+  // -- at exactly the boundary where Urep's contribution starts. Drawn as
+  // a bright dotted ring in draw(), this makes "repulsion is centered
+  // here, at each obstacle" visually unambiguous instead of needing to
+  // read the heatmap colors closely.
+  function buildRho0Contour(world) {
+    const cell = 4;
+    const cols = Math.ceil(world.width / cell) + 1;
+    const rows = Math.ceil(world.height / cell) + 1;
+    const d = new Float32Array(cols * rows);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      d[j * cols + i] = world.distToNearestObstacle(i * cell, j * cell);
+    }
+    const pts = [];
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const v = d[j * cols + i];
+      const right = i + 1 < cols ? d[j * cols + i + 1] : v;
+      const down = j + 1 < rows ? d[(j + 1) * cols + i] : v;
+      if ((v - RHO0) * (right - RHO0) < 0 || (v - RHO0) * (down - RHO0) < 0) {
+        pts.push(i * cell, j * cell);
+      }
+    }
+    return pts;
+  }
+
   function buildHeatmap(world, xi, eta, type) {
     const cell = 9;
     const cols = Math.ceil(world.width / cell), rows = Math.ceil(world.height / cell);
@@ -193,12 +227,23 @@
     return "rgb(193,60,60)";
   }
 
-  function draw(ctx, world, heat, events, idx) {
+  function draw(ctx, world, heat, rho0Pts, events, idx) {
     for (let j = 0; j < heat.rows; j++) for (let i = 0; i < heat.cols; i++) {
       ctx.fillStyle = heatColor(heat.vals[j * heat.cols + i] / (heat.max || 1));
       ctx.fillRect(i * heat.cell, j * heat.cell, heat.cell + 0.5, heat.cell + 0.5);
     }
     world.draw(ctx, { fill: "#2c2f36", stroke: "#14161a", alpha: 1 });
+
+    // ρ0 influence-radius contour: a dotted ring hugging every obstacle,
+    // marking exactly where each obstacle's own repulsive term switches on.
+    ctx.save();
+    ctx.fillStyle = "#ff4fd8";
+    for (let k = 0; k < rho0Pts.length; k += 2) {
+      ctx.beginPath();
+      ctx.arc(rho0Pts[k], rho0Pts[k + 1], 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
 
     ctx.save();
     ctx.lineWidth = 2.6;
@@ -276,11 +321,12 @@
     const randomWalk = !!(params && params.randomWalk);
     const w = world || makeDemoWorld(rng, width, height);
     const heat = buildHeatmap(w, xi, eta, attType);
+    const rho0Pts = buildRho0Contour(w);
     const { events, success } = computePath(w, xi, eta, attType, rng, randomWalk);
     let idx = 0;
     return {
       sidePanelHTML: formulaHTML(xi, eta, attType),
-      draw(ctx) { draw(ctx, w, heat, events, idx); },
+      draw(ctx) { draw(ctx, w, heat, rho0Pts, events, idx); },
       step() {
         idx = Math.min(idx + 1, events.length - 1);
         const done = idx >= events.length - 1;
@@ -303,6 +349,7 @@
       { color: "rgb(193,60,60)", label: "high potential (near obstacle)" },
       { color: "#ffffff", label: "descent path" },
       { color: "#e0a339", label: "random walk (when stuck)" },
+      { color: "#ff4fd8", label: "ρ₀ influence radius (repulsion boundary, per obstacle)" },
     ],
     params: [
       { key: "xi", label: "attractive gain ξ", type: "range", scale: "log", min: 0.03, max: 40, value: 1.1 },

@@ -76,16 +76,15 @@
 
     const root = el("div", "viz");
 
-    // ---- head ----
-    const head = el("div", "viz-head");
-    head.appendChild(el("h4", null, def.title));
-    if (def.badge) head.appendChild(el("span", "badge book", def.badge));
-    root.appendChild(head);
-    if (def.subtitle) {
-      const sub = el("div", null, def.subtitle);
-      sub.style.cssText = "padding:0 1.2rem;color:var(--text-dim);font-size:0.86rem;";
-      root.appendChild(sub);
-    }
+    // NOTE: def.title/def.badge/def.subtitle are intentionally NOT rendered
+    // here. Every page that mounts a widget already prints the algorithm's
+    // name, badge, and description once in plain page HTML (an <h1>/<h2> +
+    // a <p class="lede">/<p class="algo-desc">) immediately above the
+    // container this widget mounts into -- that page-level heading is the
+    // single source of truth. Rendering them again inside the widget card
+    // duplicated every algorithm's name/badge/description on every page.
+    // The fields are kept on vizDef (not deleted) in case other code needs
+    // them; this widget just no longer echoes them.
 
     // ---- stage + pseudocode panel ----
     // If def.pseudocode is supplied, the canvas and a pseudocode listing sit
