@@ -19,7 +19,13 @@
     <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/cell-decompositions.html</loc>
   </url>
   <url>
-    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/sampling-based.html</loc>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/prm-obprm.html</loc>
+  </url>
+  <url>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/tree-planners.html</loc>
+  </url>
+  <url>
+    <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/srt.html</loc>
   </url>
   <url>
     <loc>https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/other-sampling-strategies.html</loc>

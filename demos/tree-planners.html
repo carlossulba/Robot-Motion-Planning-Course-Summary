@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EST, SBL, RRT &amp; RRT* — Interactive Demos | Robot Motion Planning</title>
+<meta name="description" content="EST, SBL, RRT, and RRT* compared side by side on the exact same obstacles, start, and goal.">
+<link rel="canonical" href="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/tree-planners.html">
+<meta property="og:title" content="EST, SBL, RRT & RRT* — Interactive Demos">
+<meta property="og:description" content="EST, SBL, RRT, and RRT* compared side by side on the exact same obstacles, start, and goal.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/demos/tree-planners.html">
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="brand" href="../index.html">Motion<span>Planning</span></a>
+    <nav class="topnav">
+      <a href="../index.html#bug-algorithms">Bug Algorithms</a>
+      <a href="../index.html#potential-functions">Potential Functions</a>
+      <a href="../index.html#grid-based-planners">Grid-Based Planners</a>
+      <a href="../index.html#roadmaps">Roadmaps</a>
+      <a href="../index.html#cell-decompositions">Cell Decompositions</a>
+      <a href="../index.html#sampling-based">Sampling-Based Algorithms</a>
+    </nav>
+    <button class="theme-toggle" title="Toggle theme">☾</button>
+  </div>
+</header>
+
+<main class="page page-wide">
+  <div class="kicker"><a href="../index.html#sampling-based">&larr; Sampling-Based Algorithms</a></div>
+  <h1>EST, SBL, RRT &amp; RRT*</h1>
+
+  <div class="shared-instance-bar">
+    <button class="viz-btn primary" id="btn-shared-gen">🎲 Generate new (all panels)</button>
+  </div>
+
+  <h2 id="est" class="panel-anchor-heading">EST (Expansive-Spaces Trees) <span class="badge book">§8.4.2 / book §7.2.1</span></h2>
+  <p class="algo-desc">Grow a tree by picking sparsely-covered nodes to expand from, keeping a nearby candidate only if a local planner connects it back.</p>
+  <div id="viz-est"></div>
+
+  <h2 id="sbl" class="panel-anchor-heading">SBL (Single-query, Bi-directional, Lazy) <span class="badge book">§8.4.2 / book §7.2.3</span></h2>
+  <p class="algo-desc">Two EST-style trees grow with unverified edges; only when start and goal trees touch is the whole candidate path checked for collisions.</p>
+  <div id="viz-sbl"></div>
+
+  <h2 id="rrt" class="panel-anchor-heading">RRT (Rapidly-Exploring Random Tree) <span class="badge book">§8.5.1 / book §7.2.2</span></h2>
+  <p class="algo-desc">Grow a tree from q_start: sample a point, extend from the nearest tree node by a fixed step, keep it if collision-free.</p>
+  <div id="viz-rrt"></div>
+
+  <h2 id="rrtstar" class="panel-anchor-heading">RRT* <span class="badge book">§8.5.3 / book §7.2.2</span></h2>
+  <p class="algo-desc">RRT plus rewiring: every new node picks the lowest-cost nearby parent, and can steal nearby nodes from the tree if that shortens their path.</p>
+  <div id="viz-rrtstar"></div>
+</main>
+
+<footer class="site-footer">Study material assembled from course summaries, <em>Principles of Robot Motion</em> (Choset, Lynch, Hutchinson, Kantor, Burgard, Kavraki, Thrun), and past exams.</footer>
+
+<script src="../js/common.js"></script>
+<script src="../js/viz/viz-core.js"></script>
+<script src="../js/viz/world.js"></script>
+<script src="../js/viz/est.js"></script>
+<script src="../js/viz/sbl.js"></script>
+<script src="../js/viz/rrt.js"></script>
+<script src="../js/viz/rrtstar.js"></script>
+<script>
+  (function () {
+    var W = 560, H = 360;
+    var seed = (Math.random() * 1e9) | 0;
+
+    function buildWorld(s) {
+      return RMP.makeWorld(RMP.mulberry32(s), { width: W, height: H, nObstacles: 3 + Math.floor(Math.random() * 3) });
+    }
+
+    var world = buildWorld(seed);
+
+    var handles = [
+      RMP.mountViz(document.getElementById("viz-est"), Object.assign({}, RMP.vizDefs.est, { world: world })),
+      RMP.mountViz(document.getElementById("viz-sbl"), Object.assign({}, RMP.vizDefs.sbl, { world: world })),
+      RMP.mountViz(document.getElementById("viz-rrt"), Object.assign({}, RMP.vizDefs.rrt, { world: world })),
+      RMP.mountViz(document.getElementById("viz-rrtstar"), Object.assign({}, RMP.vizDefs.rrtstar, { world: world })),
+    ];
+
+    document.getElementById("btn-shared-gen").addEventListener("click", function () {
+      seed = (Math.random() * 1e9) | 0;
+      world = buildWorld(seed);
+      handles.forEach(function (h) { h.setWorld(world); });
+    });
+  })();
+</script>
+</body>
+</html>
