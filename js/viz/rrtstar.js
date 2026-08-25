@@ -19,6 +19,7 @@
   const CANDIDATE = "#e2b06a";
   const REJECT = "#c23b3b";
   const REWIRE = "#b7532c";
+  const SAMPLE_COLOR = "#9b7fd4";
 
   function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
   function segmentFree(world, a, b, step) {
@@ -58,7 +59,7 @@
     const t = Math.min(STEP, d) / d;
     const newPt = { x: nodes[nearest].x + (sample.x - nodes[nearest].x) * t, y: nodes[nearest].y + (sample.y - nodes[nearest].y) * t };
 
-    events.push({ type: "candidate", from: { x: nodes[nearest].x, y: nodes[nearest].y }, pt: newPt, tree: treeIdx, line: L_EXTEND });
+    events.push({ type: "candidate", from: { x: nodes[nearest].x, y: nodes[nearest].y }, pt: newPt, sample: { x: sample.x, y: sample.y }, tree: treeIdx, line: L_EXTEND });
 
     if (!segmentFree(world, nodes[nearest], newPt)) {
       events.push({ type: "blocked", from: { x: nodes[nearest].x, y: nodes[nearest].y }, to: newPt, line: L_EXTEND });
@@ -212,6 +213,15 @@
 
     const cur = idx >= 0 ? data.events[idx] : null;
     if (cur && cur.type === "candidate") {
+      if (cur.sample) {
+        ctx.save();
+        ctx.strokeStyle = SAMPLE_COLOR; ctx.lineWidth = 1.6;
+        const r = 4.5, p = cur.sample;
+        ctx.beginPath(); ctx.moveTo(p.x - r, p.y); ctx.lineTo(p.x + r, p.y);
+        ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x, p.y + r); ctx.stroke();
+        ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      }
       ctx.save();
       ctx.setLineDash([2, 2]); ctx.strokeStyle = CANDIDATE; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(cur.from.x, cur.from.y); ctx.lineTo(cur.pt.x, cur.pt.y); ctx.stroke();
@@ -267,7 +277,7 @@
         const e = data.events[idx];
         const treeName = (t) => (data.mode === "bidirectional" ? (t === 0 ? "T_start" : "T_goal") : "the tree");
         let note;
-        if (e.type === "candidate") note = `Extended toward a random sample from ${treeName(e.tree)} -> q_new. Testing collision...`;
+        if (e.type === "candidate") note = `Sampled q_rand (purple), extended toward it from ${treeName(e.tree)} -> q_new. Testing collision...`;
         else if (e.type === "blocked") note = "Extension blocked by an obstacle — discarded.";
         else if (e.type === "add" && e.isGoal) note = "First connection to q_goal found — the tree keeps rewiring briefly to improve it.";
         else if (e.type === "add") {
@@ -294,6 +304,7 @@
     legend: [
       { color: START_COLOR, label: "tree edge (from start)" },
       { color: GOAL_TREE_COLOR, label: "tree edge (from goal, bidirectional)" },
+      { color: SAMPLE_COLOR, label: "random sample q_rand (this step only)" },
       { color: CANDIDATE, label: "candidate q_new (untested)" },
       { color: REJECT, label: "blocked extension" },
       { color: REWIRE, label: "rewire (this step)" },

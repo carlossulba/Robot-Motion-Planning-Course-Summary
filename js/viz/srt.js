@@ -95,7 +95,7 @@
   }
 
   function computeSRT(world, rng) {
-    const M = 6, K = 7;
+    const M = 6, K = 11;
     const events = [];
     const treesArr = [];
 
@@ -342,7 +342,7 @@
     ],
     makeSim,
     pythonCode: `
-def build_srt(is_free, sample_free, n_trees=6, nodes_per_tree=7):
+def build_srt(is_free, sample_free, n_trees=6, nodes_per_tree=11):
     trees = [grow_tree(sample_free(), is_free, nodes_per_tree) for _ in range(n_trees)]
     trees += [Tree(start), Tree(goal)]              # start/goal are single-node trees too
 

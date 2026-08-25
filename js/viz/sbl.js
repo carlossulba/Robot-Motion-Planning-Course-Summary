@@ -57,7 +57,7 @@
 
   // pseudocode line indices (0-based) -- see vizDefs.sbl.pseudocode below
   const L_PICK = 0, L_LAZY_ADD = 1, L_PROPOSE = 2, L_VALIDATE = 3;
-  const NEIGHBOR_R = 42, SAMPLE_R = 26, CONNECT_R = 34, MAX_ITER = 1400;
+  const NEIGHBOR_R = 30, SAMPLE_R = 32, CONNECT_R = 34, MAX_ITER = 1400;
 
   function computeSBL(world, rng) {
     const events = [];
@@ -230,7 +230,7 @@
     ],
     makeSim,
     pythonCode: `
-def sbl_step(tree, other_tree, is_free, connect_radius=26):
+def sbl_step(tree, other_tree, is_free, connect_radius=34):
     picked = weighted_choice_by_sparsity(tree)         # density-weighted, as in EST
     candidate = sample_near(picked)
     if not is_free(candidate):

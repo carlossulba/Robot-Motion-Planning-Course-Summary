@@ -38,7 +38,7 @@
   // free point, binary-search the boundary between them. Pushes every
   // intermediate attempt as an event so the process is fully visible.
   function buildOneMilestone(world, rng, events) {
-    const RAY_STEP = 10, MAX_RAY_STEPS = 30, BISECT_ITERS = 6;
+    const RAY_STEP = 10, MAX_RAY_STEPS = 30, BISECT_TOL = 1.5, MAX_BISECT_ITERS = 10;
 
     let seed = null;
     for (let tries = 0; tries < 300; tries++) {
@@ -67,8 +67,13 @@
     }
     if (!freePt) return null; // never found a free point along this ray -- skip this attempt
 
+    // Binary search until the bracket is within BISECT_TOL of the boundary --
+    // "close enough" is fine, we don't need to nail the boundary exactly.
+    // hi is always free by construction, so stopping early still guarantees
+    // the returned milestone is sampled outside the obstacle.
     let lo = collidingPt, hi = freePt; // lo: colliding, hi: free
-    for (let it = 0; it < BISECT_ITERS; it++) {
+    let it = 0;
+    while (it < MAX_BISECT_ITERS && dist(lo, hi) > BISECT_TOL) {
       const mid = { x: (lo.x + hi.x) / 2, y: (lo.y + hi.y) / 2 };
       events.push({ type: "bisect-candidate", pt: mid, line: L_BISECT });
       if (world.isFree(mid.x, mid.y)) {
@@ -78,6 +83,7 @@
         lo = mid;
         events.push({ type: "bisect-colliding", pt: mid, line: L_BISECT });
       }
+      it++;
     }
     events.push({ type: "milestone", pt: hi, line: L_MILESTONE });
     return hi;
@@ -276,12 +282,12 @@
     pseudocode: [
       "find a colliding configuration (inside a C-obstacle)",
       "pick a random direction; step along it until reaching a free configuration",
-      "binary-search the segment between the colliding and free points -> converge on the boundary",
+      "binary-search the segment between the colliding and free points until close enough to the boundary (free endpoint stays free)",
       "the boundary point becomes the new milestone",
     ],
     makeSim,
     pythonCode: `
-def obprm_milestone(is_free, sample_anywhere, ray_step=10, bisect_iters=6):
+def obprm_milestone(is_free, sample_anywhere, ray_step=10, bisect_tol=1.5, max_iters=10):
     seed = sample_anywhere()
     while is_free(seed):                        # rejection-sample a COLLIDING seed
         seed = sample_anywhere()
@@ -297,13 +303,15 @@ def obprm_milestone(is_free, sample_anywhere, ray_step=10, bisect_iters=6):
             colliding = p                        # keep marching until free space is found
 
     lo, hi = colliding, free                     # binary search converges on the boundary
-    for _ in range(bisect_iters):
+    it = 0
+    while it < max_iters and dist(lo, hi) > bisect_tol:  # "close enough" is fine
         mid = (lo + hi) / 2
         if is_free(mid):
             hi = mid
         else:
             lo = mid
-    return hi                                     # boundary-adjacent free milestone
+        it += 1
+    return hi                                     # boundary-adjacent free milestone, still guaranteed free
 
 # Roadmap connection and query proceed exactly like plain PRM (see prm.js) --
 # OBPRM only changes how each milestone is generated.
