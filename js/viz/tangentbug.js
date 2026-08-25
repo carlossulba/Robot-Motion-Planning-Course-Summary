@@ -69,7 +69,7 @@
   const L_SENSE = 0, L_MOTION = 2, L_LOCALMIN = 4, L_FOLLOW = 6, L_LEAVE = 8, L_REACHED = 9;
 
   function computeTangentBug(world) {
-    const STEP = 4, EPS = 3, H_EPS = 1.5;
+    const STEP = 4, EPS = 3, H_EPS = 1.5, MIN_FOLLOW_STEPS = 3;
     const events = [{ x: world.start.x, y: world.start.y, phase: "start", rays: [], line: L_SENSE, note: "Start at q<sub>start</sub>, equipped with a finite-range radial sensor (dashed circle)." }];
     let pos = { x: world.start.x, y: world.start.y };
     let guard = 0;
@@ -136,10 +136,30 @@
         const p = boundary[i];
         const pts2 = sensePoints(world, p);
         events.push({ x: p.x, y: p.y, phase: "follow", rays: pts2, line: L_FOLLOW, note: "Following the boundary; comparing d<sub>reach</sub> (best sensed shortcut) to d<sub>followed</sub> (closest point seen so far)." });
+        // d_reach must reflect genuinely NEW information -- open space, or a
+        // different obstacle -- not just "the same wall I'm already circling,
+        // sensed a few px ahead of me". Blocked points on the obstacle
+        // currently being followed are exactly what the boundary trace
+        // itself will visit next; counting them (with a travel-cost term
+        // that's ~0 since they're right next to p) made every step look
+        // like a "shortcut" purely from ordinary forward progress, so the
+        // demo left almost immediately, indistinguishable from Bug0. Only
+        // points that reveal something beyond this obstacle -- clear range,
+        // or a DIFFERENT obstacle's surface -- count as a real shortcut.
         let dReach = Infinity;
-        for (const q of pts2) dReach = Math.min(dReach, dist(p, q) + dist(q, world.goal));
+        for (const q of pts2) {
+          if (q.blocked && world.nearestObstacle(q.x, q.y) === obs) continue;
+          dReach = Math.min(dReach, dist(q, world.goal));
+        }
         if (dist(p, world.goal) <= RANGE && lineOfSightClear(world, p, world.goal)) dReach = Math.min(dReach, dist(p, world.goal));
-        if (dReach < dFollowedMin - 2) {
+        // Require a few real steps of boundary-following before trusting a
+        // "shortcut" -- right next to the hit point, a momentary gap in the
+        // sensor readings (e.g. grazing a sharp corner) can look like an
+        // opening that isn't really walkable, causing the robot to leave,
+        // immediately fail to make progress, and re-hit at nearly the same
+        // spot -- an infinite micro-loop. A short cooldown gives the
+        // geometry a chance to settle before the leave condition can fire.
+        if (i >= MIN_FOLLOW_STEPS && dReach < dFollowedMin - 2) {
           pos = { x: p.x, y: p.y };
           lastPhase = "leave";
           events.push({ x: pos.x, y: pos.y, phase: "leave", rays: pts2, line: L_LEAVE, note: "d<sub>reach</sub> &lt; d<sub>followed</sub> — a shortcut is now visible. Leave the boundary." });
@@ -270,7 +290,7 @@
     ],
     makeSim,
     pythonCode: `
-def tangent_bug(start, goal, sense, is_free, range_=95, step=0.05, h_eps=1.5):
+def tangent_bug(start, goal, sense, is_free, range_=95, step=0.05, h_eps=1.5, min_follow_steps=3):
     """Tangent Bug: finite-range radial sensor picks the sensed point that
     minimizes heuristic h(p) = dist(robot, p) + dist(p, goal)."""
     pos, path = start, [start]
@@ -307,15 +327,23 @@ def tangent_bug(start, goal, sense, is_free, range_=95, step=0.05, h_eps=1.5):
         # --- h(p) stopped decreasing: local minimum -> boundary-following,
         # still re-sensing at every point for a shortcut ---
         q_hit = pos
+        obstacle = nearest_obstacle(pos)
         d_followed = dist(q_hit, goal)
-        for p in trace_boundary(nearest_obstacle(pos), q_hit, step):
+        for i, p in enumerate(trace_boundary(obstacle, q_hit, step)):
             path.append(p)
             d_followed = min(d_followed, dist(p, goal))
             sensed = sense(p, range_)
-            d_reach = min(dist(p, q) + dist(q, goal) for q in sensed)
+            # only points that reveal something BEYOND this obstacle count as
+            # a real shortcut -- blocked points still on the obstacle being
+            # followed are just the wall itself, sensed a step ahead
+            reach_candidates = [q for q in sensed if not (q.blocked and nearest_obstacle(q) is obstacle)]
+            d_reach = min((dist(q, goal) for q in reach_candidates), default=float("inf"))
             if line_of_sight_clear(p, goal) and dist(p, goal) <= range_:
                 d_reach = min(d_reach, dist(p, goal))
-            if d_reach < d_followed:
+            # require a few real steps before trusting a "shortcut" -- right
+            # at the hit point a momentary gap can look walkable but isn't,
+            # which otherwise causes leave -> immediate re-hit forever
+            if i >= min_follow_steps and d_reach < d_followed:
                 pos = p                                    # shortcut found
                 prev_best_h = float("inf")                  # fresh episode next time we're blocked
                 break
