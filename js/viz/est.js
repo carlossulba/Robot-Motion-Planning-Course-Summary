@@ -57,7 +57,7 @@
 
   // pseudocode line indices (0-based) -- see vizDefs.est.pseudocode below
   const L_PICK = 0, L_SAMPLE = 1, L_ADD = 2, L_MERGE = 3;
-  const NEIGHBOR_R = 30, SAMPLE_R = 32, GOAL_BIAS = 0.07, MERGE_R = 10, MAX_ITER = 900;
+  const NEIGHBOR_R = 30, SAMPLE_R = 44, GOAL_BIAS = 0.07, MERGE_R = 10, MAX_ITER = 900;
 
   function computeEST(world, rng, bidirectional) {
     const events = [];
@@ -248,7 +248,7 @@
     ],
     makeSim,
     pythonCode: `
-def est_step(tree, is_free, sample_disk, neighbor_radius=30, sample_radius=32):
+def est_step(tree, is_free, sample_disk, neighbor_radius=30, sample_radius=44):
     weights = [1 / (count_neighbors(tree, n, neighbor_radius) + 1) for n in tree]
     picked = weighted_choice(tree, weights)          # sparsely-covered nodes favored
 

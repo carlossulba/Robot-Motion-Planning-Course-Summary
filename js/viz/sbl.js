@@ -57,7 +57,7 @@
 
   // pseudocode line indices (0-based) -- see vizDefs.sbl.pseudocode below
   const L_PICK = 0, L_LAZY_ADD = 1, L_PROPOSE = 2, L_VALIDATE = 3;
-  const NEIGHBOR_R = 30, SAMPLE_R = 32, CONNECT_R = 34, MAX_ITER = 1400;
+  const NEIGHBOR_R = 30, SAMPLE_R = 44, CONNECT_R = 34, MAX_ITER = 1400;
 
   function computeSBL(world, rng) {
     const events = [];

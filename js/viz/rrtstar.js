@@ -48,7 +48,7 @@
   // pseudocode line indices (0-based) -- see vizDefs.rrtstar.pseudocode below
   const L_EXTEND = 0, L_EXAMINE = 1, L_PARENT = 2, L_REWIRE = 3;
 
-  const STEP = 16, RADIUS = 46, GOAL_BIAS = 0.08;
+  const STEP = 24, RADIUS = 68, GOAL_BIAS = 0.08;
 
   // One RRT* iteration against `nodes` (mutated in place). Pushes a
   // "candidate" event, then either "blocked" or "add" (carrying `rewires`).
@@ -321,7 +321,7 @@
     ],
     makeSim,
     pythonCode: `
-def rrt_star(start, goal, is_free, step=16, radius=46, max_iter=1600):
+def rrt_star(start, goal, is_free, step=24, radius=68, max_iter=1600):
     nodes = [Node(start, parent=None, cost=0)]
 
     for _ in range(max_iter):

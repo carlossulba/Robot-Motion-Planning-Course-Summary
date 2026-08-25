@@ -40,7 +40,7 @@
   const L_SAMPLE = 0, L_NEAREST = 1, L_EXTEND = 2, L_ADD = 3, L_GOAL = 4;
 
   function computeRRT(world, rng, bidirectional) {
-    const STEP = 16, GOAL_BIAS = 0.08, MAX_ITER = 3000;
+    const STEP = 24, GOAL_BIAS = 0.08, MAX_ITER = 3000;
     const events = [];
 
     if (!bidirectional) {
@@ -246,7 +246,7 @@
     ],
     makeSim,
     pythonCode: `
-def rrt(start, goal, is_free, step=16, goal_bias=0.08, max_iter=3000):
+def rrt(start, goal, is_free, step=24, goal_bias=0.08, max_iter=3000):
     nodes = [Node(start, parent=None)]
 
     for _ in range(max_iter):

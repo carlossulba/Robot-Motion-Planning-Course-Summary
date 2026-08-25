@@ -299,7 +299,7 @@
   }
 
   function makeSim({ rng, width, height, world: sharedWorld }) {
-    const world = sharedWorld || makeWorld(rng, { width, height, nObstacles: 3 + Math.floor(rng() * 3) });
+    const world = sharedWorld || makeWorld(rng, { width, height, nObstacles: 5 + Math.floor(rng() * 4) });
     const data = computeSRT(world, rng);
     let idx = -1;
     const total = data.events.length;
