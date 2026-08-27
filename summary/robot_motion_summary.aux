@@ -1,0 +1,97 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand*\HyPL@Entry[1]{}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}The Planning Problem}{1}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Characterizing a Planner}{1}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Performance Metrics}{1}{subsection.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Contents}{2}{subsection.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}Configuration Space}{2}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Basics}{2}{subsection.2.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \small  The C-space of a 2R planar arm is a torus $T^2=S^1\times S^1$: each joint angle ($\theta _1$, $\theta _2$) independently wraps around a circle, so the two angles together sweep out the surface of a donut, not a flat square (cf.\ book Fig.\ 3.10).}}{2}{figure.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Degrees of Freedom}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Parametrizations of Orientation}{3}{subsection.2.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces \small  Axis-angle representation: a rotation by angle $\theta $ about a unit axis $n$, the geometric picture behind the quaternion formula above (cf.\ book Fig.\ E.2).}}{3}{figure.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Free Space and Obstacles}{3}{subsection.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Topology of Configuration Space}{3}{subsection.2.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}Point Representation}{4}{subsection.2.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \small  Point representation via Minkowski sum: the robot's bulk is absorbed into an enlarged obstacle, so the robot can now be treated as a single point (cf.\ book Fig.\ 3.5).}}{4}{figure.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.7}Collision Detection}{5}{subsection.2.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \small  Different hulls require different number of tests (cf.\ Slides 1.22)}}{5}{figure.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Bug Algorithms}{5}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Bug0}{5}{subsection.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \small  Bug0 example (cf.\ Slides 2.5)}}{5}{figure.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Bug1}{5}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Bug2}{5}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Tangent Bug}{6}{subsection.3.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \small  The dotted circle is the robot's sensing range; $O_i$ are points of discontinuity in what the sensor can see. As the robot moves it re-evaluates which direction currently minimizes $h(p)$. (cf.\ book Fig.\ 2.7)}}{6}{figure.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces \small  $M$ is where motion-to-goal first gets deflected by the obstacle (a local minimum of the heuristic). The dashed/dotted arc is boundary-following, continuously comparing $d_{followed}$ against $d_{reach}$ (cf.\ book Fig.\ 2.10).}}{6}{figure.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Comparing the Family}{6}{subsection.3.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Potential Functions}{6}{section.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces \small  Electrostatic intuition: the goal is a negative charge (attracts), the obstacle boundary a ring of positive charges (repels). The robot is a positive test charge and simply follows the field (cf.\ book Fig.\ 4.1).}}{7}{figure.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces \small  Failure case: inside a concave (horseshoe) obstacle, the repulsive gradient from the near wall exactly balances the attractive pull toward $q_{goal}$ (cf.\ book Fig.\ 4.10).}}{7}{figure.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Grid-Based Planners}{7}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Brushfire Planner}{7}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Wave-Front Planner}{8}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Roadmaps}{8}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Visibility Graph}{8}{subsection.6.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces \small  Visibility graph for three polygonal obstacles (thin lines); the dashed line is the shortest path found by graph search between $q_{start}$ and $q_{goal}$ (cf.\ book Fig.\ 5.4).}}{8}{figure.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Voronoi Diagram (GVD)}{9}{subsection.6.2}\protected@file@percent }
+\newlabel{sssec:gvd}{{6.2}{9}{Voronoi Diagram (GVD)}{subsection.6.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces \small  The GVD (thick curves) for a handful of obstacles --- every point on a curve is equidistant to (at least) two nearest obstacles (cf.\ book Fig.\ 5.9).}}{9}{figure.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}GVG / HGVG}{9}{subsection.6.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces \small  A rectangular room with a box in its interior: the GVG splits into two disconnected pieces --- an outer network around the room's walls and an inner "halo" loop around the box --- with no edge linking them (cf.\ book Fig.\ 5.19).}}{9}{figure.12}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \small  The same room, with the HGVG's second-order edges added --- the extra strands radiating out from each junction. These are what bridges the previously separate GVG pieces from the figure above into one connected roadmap (cf.\ book Fig.\ 5.20).}}{9}{figure.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Cell Decompositions}{10}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1}Trapezoidal Decomposition}{10}{subsection.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.2}Boustrophedon Decomposition}{10}{subsection.7.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces \small  Same free space, two decompositions: trapezoidal (left) slices at every vertex; boustrophedon (right) only at critical points, so the concave obstacle needs fewer cells and a shorter coverage path (cf.\ book Fig.\ 6.9).}}{10}{figure.14}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces \small  Curved-slice boustrophedon decomposition (cf.\ book Fig.\ 6.12).}}{10}{figure.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.3}Cell Decomposition in Higher Dimensions}{10}{subsection.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.3.1}Canny's Roadmap Algorithm}{10}{subsubsection.7.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.3.2}The Halting Problem}{10}{subsubsection.7.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.3.3}Extension to n Dimensions}{10}{subsubsection.7.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {7.3.4}k-d Tree}{10}{subsubsection.7.3.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces \small  A 2D k-d tree: 8 points split by alternating axis (vertical first, horizontal next, and so on). Left: the resulting partition of the plane. Right: the same splits as a binary tree.}}{11}{figure.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.4}Approximate Cell Decomposition}{11}{subsection.7.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {17}{\ignorespaces \small  A quadtree recursively splits mixed cells into quadrants until each is fully free/occupied, or a resolution limit is reached (cf. \ Slides 3.11).}}{11}{figure.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {8}Roadmapping with Random Sampling}{11}{section.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.1}Sampling Basics}{11}{subsection.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.2}Coverage, Connectivity, and Expansiveness}{11}{subsection.8.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.3}Multi-Query: PRM}{12}{subsection.8.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.3.1}Basic PRM}{12}{subsubsection.8.3.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {18}{\ignorespaces \small  A PRM roadmap for a point robot: circles are collision-free milestones, edges are validated straight-line connections to $k{=}3$ nearest neighbors (cf.\ book Fig.\ 7.3).}}{12}{figure.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.3.2}OBPRM}{12}{subsubsection.8.3.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {19}{\ignorespaces \small  OBPRM pushes samples that start inside an obstacle outward until they land on its boundary, directly seeding milestones where narrow passages live.}}{12}{figure.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.3.3}Other Sampling Strategies}{12}{subsubsection.8.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.4}Single-Query Planners}{12}{subsection.8.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.4.1}Expansion + Connection (Single-Query PRM)}{13}{subsubsection.8.4.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {20}{\ignorespaces \small  A tree-based planner's search tree for a real spacecraft-docking problem. (Phillips \& Kavraki; cf.\ book Fig.\ 7.11.)}}{13}{figure.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.4.2}EST and SBL}{13}{subsubsection.8.4.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {21}{\ignorespaces \small  Merging two EST trees: $q$ was just added to $T_{init}$; the local planner tries to connect it to its closest configurations $x,y$ in $T_{goal}$, failing at $x$ but succeeding at $y$ (cf.\ book Fig.\ 7.13).}}{13}{figure.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.5}RRT}{13}{subsection.8.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.5.1}Basic RRT}{13}{subsubsection.8.5.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {22}{\ignorespaces \small  Adding a new configuration to an RRT: $q_{rand}$ is sampled uniformly in $Q_{free}$; $q$ is the closest node to it; only $q_{new}$ and $(q,q_{new})$ are added to the tree (cf.\ book Fig.\ 7.14).}}{13}{figure.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.5.2}Kinodynamic RRT}{13}{subsubsection.8.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {8.5.3}RRT*}{14}{subsubsection.8.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.6}Sampling-Based Roadmap of Trees}{14}{subsection.8.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {23}{\ignorespaces \small  An SRT roadmap: each light-gray blob is one tree (black square = root); dashed lines are edges that merged two trees together (cf.\ book Fig.\ 7.16).}}{14}{figure.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {8.7}Path Post-Processing}{14}{subsection.8.7}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {24}{\ignorespaces \small  Greedy shortcutting of a PRM path: starting from $q_{init}$, repeatedly try to connect straight to the current target, falling back one node at a time until a connection succeeds (cf.\ book Fig.\ 7.7).}}{14}{figure.24}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {9}Kalman Filter}{14}{section.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.1}Probabilistic Estimation}{15}{subsection.9.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {25}{\ignorespaces \small  Real odometry trace of a mobile robot (thin curve) against the room it actually drove around (gray floor plan): pure dead reckoning drifts far enough that the trace no longer resembles the room at all --- exactly the unbounded error growth the notebox above warns about (cf.\ book Fig.\ 8.1).}}{15}{figure.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.2}Linear Kalman Filter}{15}{subsection.9.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.3}Extended Kalman Filter}{16}{subsection.9.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {26}{\ignorespaces \small  EKF localization along a real path (dotted): each ellipse is the estimate's uncertainty at a landmark sighting, shrinking as more measurements are fused in (cf.\ book Fig.\ 8.8).}}{16}{figure.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.4}Kalman Filter for SLAM}{16}{subsection.9.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {9.5}Unscented Kalman Filter}{17}{subsection.9.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {10}Bayesian Methods}{17}{section.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.1}Recursive Bayesian Filtering}{17}{subsection.10.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {27}{\ignorespaces \small  Global localization in a hallway with 3 doors: the belief starts uniform; sensing a door splits it into 3 equally-likely peaks; moving right predicts-forward and flattens each peak slightly; sensing a second door reinforces only the peak consistent with \emph  {both} sightings, leaving the robot confident of its true location --- prediction spreads the belief out, update sharpens it (cf.\ book Fig.\ 9.1).}}{18}{figure.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.2}Representing the Belief}{18}{subsection.10.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {28}{\ignorespaces \small  Global localization with a grid: the belief (dark = likely) starts smeared at (A), narrows at (B), and pins down a unique peak at (C) (cf.\ book Fig.\ 9.4) .}}{18}{figure.28}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {29}{\ignorespaces \small  Global localization with a particle filter (10{,}000 samples): particles start spread uniformly over free space (left), thin out and cluster after fusing 10 sensor readings (middle), and collapse onto the true pose after 65 steps (right) --- resampling is what drives this convergence (cf.\ book Fig.\ 9.7).}}{19}{figure.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {10.3}Mapping}{19}{subsection.10.3}\protected@file@percent }
+\gdef \@abspage@last{19}

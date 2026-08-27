@@ -1,0 +1,127 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1.6cm,top=1.8cm,bottom=2cm]{geometry}
+\usepackage{multicol}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\setlist{leftmargin=1.3em, itemsep=3pt, topsep=4pt, parsep=2pt}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+
+% ---- friendly sans-serif font stack (TeX Gyre Heros / Helvetica-alike) ----
+\usepackage{times}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{tgheros}
+\usepackage[scaled]{droidsansmono}
+\renewcommand{\ttdefault}{DroidSansMono}
+
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{parskip}
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+
+% ---- palette ----
+\definecolor{bannerbg}{HTML}{3B5A7A}
+\definecolor{subcolor}{HTML}{2B4A66}
+\definecolor{noteedge}{HTML}{2B6CB0}
+\definecolor{notebg}{HTML}{EAF1F8}
+\definecolor{warnedge}{HTML}{B7532C}
+\definecolor{warnbg}{HTML}{FBEEE6}
+\definecolor{demobg}{HTML}{E9F5EE}
+\definecolor{demoedge}{HTML}{2F8F5B}
+\definecolor{defedge}{HTML}{6A4FB0}
+\definecolor{defbg}{HTML}{F1EDF9}
+
+% ---- header/footer ----
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\lhead{\small\itshape Robot Motion Planning}
+\rhead{\small\itshape Course Summary}
+\cfoot{\small\thepage}
+
+% ---- section banners ----
+\newcommand{\sectionbanner}[1]{%
+  \colorbox{bannerbg}{\parbox[c][1.0cm]{\dimexpr\linewidth-2\fboxsep\relax}{\color{white}\Large\bfseries #1}}%
+}
+\titleformat{\section}{\sectionbanner}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{subcolor}}
+  {\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\itshape\color{subcolor}}
+  {\thesubsubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{15pt}{11pt}
+\titlespacing*{\subsection}{0pt}{12pt}{5pt}
+\titlespacing*{\subsubsection}{0pt}{9pt}{4pt}
+
+\setlength{\columnsep}{22pt}
+\setlength{\columnseprule}{0.4pt}
+
+% ---- boxed environments ----
+\newtcolorbox{notebox}{
+  colback=notebg, colframe=noteedge, boxrule=0pt, leftrule=2.5pt,
+  arc=1pt, left=8pt, right=7pt, top=6pt, bottom=6pt, breakable
+}
+\newtcolorbox{warnbox}{
+  colback=warnbg, colframe=warnedge, boxrule=0pt, leftrule=2.5pt,
+  arc=1pt, left=8pt, right=7pt, top=6pt, bottom=6pt, breakable
+}
+\newtcolorbox{democallout}{
+  colback=demobg, colframe=demoedge, boxrule=0pt, leftrule=2.5pt,
+  arc=1pt, left=8pt, right=7pt, top=6pt, bottom=6pt, breakable
+}
+\newtcolorbox{defbox}[1]{
+  colback=defbg, colframe=defedge, boxrule=0pt, leftrule=2.5pt,
+  arc=1pt, left=8pt, right=7pt, top=6pt, bottom=6pt, breakable,
+  title={#1}, fonttitle=\bfseries\color{defedge}, coltitle=defedge,
+  colbacktitle=defbg, boxsep=0pt, top=6pt,
+  attach title to upper={\ ---\ }
+}
+
+% ---- inline helpers ----
+\newcommand{\alg}[1]{\textbf{\color{bannerbg}#1}}
+\newcommand{\keyterm}[1]{\textbf{#1}}
+\newcommand{\demo}[1]{\textbf{Try it live:} \url{#1}}
+
+% ---- figure helper: \bookfig{filename}{caption}{width-fraction} ----
+\newcommand{\bookfig}[3]{%
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=#3\linewidth]{#1}
+    \caption{\small #2}
+  \end{figure}%
+}
+
+\begin{document}
+\begin{center}
+{\huge\bfseries Robot Motion Planning}
+
+{\Large Course Summary}
+
+{\small This summary is accompanied by a companion website with interactive visualizations. The textbook \emph{Principles of Robot Motion} (Choset et al.) was used for guidance and figures.}
+
+{\small Carlos Sulbarán Fandiño}
+\end{center}
+\vspace{6pt}
+
+\raggedcolumns
+\begin{multicols}{2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% CONTENT GOES HERE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction}
+Placeholder.
+
+\end{multicols}
+\end{document}

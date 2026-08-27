@@ -1,0 +1,1244 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1.6cm,top=1.8cm,bottom=2cm]{geometry}
+\usepackage{multicol}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\setlist{leftmargin=1.3em, itemsep=3pt, topsep=4pt, parsep=2pt}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+
+% ---- friendly sans-serif font stack (TeX Gyre Heros / Helvetica-alike) ----
+\usepackage{times}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{tgheros}
+\usepackage[scaled]{droidsansmono}
+\renewcommand{\ttdefault}{DroidSansMono}
+
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{parskip}
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+
+% ---- palette ----
+\definecolor{bannerbg}{HTML}{3B5A7A}
+\definecolor{subcolor}{HTML}{2B4A66}
+\definecolor{noteedge}{HTML}{2B6CB0}
+\definecolor{notebg}{HTML}{EAF1F8}
+\definecolor{warnedge}{HTML}{B7532C}
+\definecolor{warnbg}{HTML}{FBEEE6}
+\definecolor{demobg}{HTML}{E9F5EE}
+\definecolor{demoedge}{HTML}{2F8F5B}
+\definecolor{defedge}{HTML}{6A4FB0}
+\definecolor{defbg}{HTML}{F1EDF9}
+
+% ---- header/footer ----
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\lhead{\small\itshape Robot Motion Planning}
+\rhead{\small\itshape Course Summary}
+\cfoot{\small\thepage}
+
+% ---- section banners ----
+\newcommand{\sectionbanner}[1]{%
+  \colorbox{bannerbg}{\parbox[c][1.0cm]{\dimexpr\linewidth-2\fboxsep\relax}{\color{white}\Large\bfseries #1}}%
+}
+\titleformat{\section}{\sectionbanner}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{subcolor}}
+  {\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries\itshape\color{subcolor}}
+  {\thesubsubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{15pt}{11pt}
+\titlespacing*{\subsection}{0pt}{12pt}{5pt}
+\titlespacing*{\subsubsection}{0pt}{9pt}{4pt}
+
+\setlength{\columnsep}{22pt}
+\setlength{\columnseprule}{0.4pt}
+
+% ---- boxed environments ----
+\newtcolorbox{notebox}{
+  colback=notebg, colframe=noteedge, boxrule=0pt, leftrule=2.5pt,
+  arc=1pt, left=8pt, right=7pt, top=6pt, bottom=6pt, breakable
+}
+\newtcolorbox{warnbox}{
+  colback=warnbg, colframe=warnedge, boxrule=0pt, leftrule=2.5pt,
+  arc=1pt, left=8pt, right=7pt, top=6pt, bottom=6pt, breakable
+}
+\newtcolorbox{democallout}{
+  colback=demobg, colframe=demoedge, boxrule=0pt, leftrule=2.5pt,
+  arc=1pt, left=8pt, right=7pt, top=6pt, bottom=6pt, breakable
+}
+\newtcolorbox{defbox}[1]{
+  colback=defbg, colframe=defedge, boxrule=0pt, leftrule=2.5pt,
+  arc=1pt, left=8pt, right=7pt, top=6pt, bottom=6pt, breakable,
+  title={#1}, fonttitle=\bfseries\color{defedge}, coltitle=defedge,
+  colbacktitle=defbg, boxsep=0pt, top=6pt,
+  attach title to upper={\ ---\ }
+}
+
+% ---- inline helpers ----
+\newcommand{\alg}[1]{\textbf{\color{bannerbg}#1}}
+\newcommand{\keyterm}[1]{\textbf{#1}}
+\newcommand{\demo}[1]{\textbf{Try it live:} \url{#1}}
+
+% ---- figure helper: \bookfig{filename}{caption}{width-fraction} ----
+\newcommand{\bookfig}[3]{%
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=#3\linewidth]{#1}
+    \caption{\small #2}
+  \end{figure}%
+}
+
+\begin{document}
+\begin{center}
+{\huge\bfseries Robot Motion Planning}
+
+{\Large Course Summary}
+
+{\small This summary is accompanied by a companion website with interactive visualizations. The textbook \emph{Principles of Robot Motion} (Choset et al.) was used for guidance and figures.}
+
+{\small}
+\end{center}
+\vspace{6pt}
+
+\raggedcolumns
+\begin{multicols}{2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+
+Motion planning asks how a robot can move from a start configuration to a goal configuration while avoiding obstacles, and this section lays the conceptual groundwork: define the planning problem, characterize a planner, and use metrics to compare planners.
+
+\subsection{The Planning Problem}
+
+\begin{defbox}{Piano Mover's Problem}
+Given a rigid body (e.g.\ a free-flying polyhedron) and a known set of stationary obstacles, find a collision-free path from $q_{start}$ to $q_{goal}$.
+\end{defbox}
+\begin{itemize}
+\item \keyterm{Sofa mover's problem}: piano mover's problem restricted to the plane (body + planar obstacles).
+\item \keyterm{Generalized mover's problem}: robot is a set of rigid bodies linked at joints (e.g.\ a robot arm).
+\end{itemize}
+
+Key idea: instead of tracking every point of the robot, track its \keyterm{configuration} $q$ --- the smallest set of real-valued parameters that fully fixes the position of every point of the robot --- and plan in the \keyterm{configuration space} (C-space) $Q$ (formalized in \S2).
+
+\begin{defbox}{Path}
+Continuous $c:[0,1]\to Q$ with $c(0)=q_{start}$, $c(1)=q_{goal}$, $c(s)\in Q_{free}\ \forall s\in[0,1]$. Purely geometric/kinematic, no notion of time.
+\end{defbox}
+\begin{defbox}{Trajectory}
+A path parametrized by time, $c:[0,T]\to Q$, with $c\in C^2$ (twice-differentiable, so velocity/acceleration exist). Possible constraints: smoothness, min.\ length, min.\ time. Finding one = \keyterm{trajectory}/\keyterm{motion planning}.
+\end{defbox}
+
+\subsection{Characterizing a Planner}
+
+Book table 1.1 (pp.\ 28--30) characterizes the motion planning problem along three independent axes:
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{2.1cm}p{3.0cm}p{2.6cm}@{}}
+\toprule
+\textbf{Task} & \textbf{Robot} & \textbf{Algorithm} \\
+\midrule
+\begin{itemize}[leftmargin=1em,itemsep=2pt,topsep=2pt]
+\item Navigate
+\item Cover
+\item Localize
+\item Map
+\end{itemize}
+&
+\begin{itemize}[leftmargin=1em,itemsep=2pt,topsep=2pt]
+\item DoF / C-space
+\item Kinematic vs.\ dynamic
+\item Omnidirectional vs.\ nonholonomic
+\end{itemize}
+&
+\begin{itemize}[leftmargin=1em,itemsep=2pt,topsep=2pt]
+\item Optimal?
+\item Complexity
+\item Completeness
+\item Online/offline
+\item Sensor-based?
+\end{itemize} \\ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Task.}
+\begin{itemize}
+\item \keyterm{Navigation}: collision-free motion between two configurations.
+\item \keyterm{Coverage}: pass a sensor/tool over every point of a region (demining, mowing, painting).
+\item \keyterm{Localization}: use a map + sensor data to find the current configuration.
+\item \keyterm{Mapping}: explore/sense an unknown environment.
+\end{itemize}
+
+\textbf{Robot.}
+\begin{itemize}
+\item \keyterm{DoF / C-space}: the dimension and shape of the robot's configuration space (formalized in \S2).
+\item \keyterm{Kinematic vs.\ dynamic}: robot modeled kinematically (velocities as controls) or dynamically (forces as controls).
+\item \keyterm{Omnidirectional vs.\ nonholonomic}: omnidirectional can move instantaneously in any C-space direction; nonholonomic is subject to a velocity constraint (e.g.\ a car cannot slide sideways).
+\end{itemize}
+
+\textbf{Algorithm.}
+\begin{itemize}
+\item \keyterm{Optimal?}: whether the planner returns the best solution (e.g.\ shortest path) or merely a valid one.
+\item \keyterm{Complexity}: the algorithm's running time and memory use as a function of problem size.
+\item \keyterm{Completeness}:
+  \begin{itemize}
+  \item \keyterm{Complete}: always finds a solution if one exists, else correctly reports failure, in finite time.
+  \item \keyterm{Resolution complete}: finds a solution if one exists \emph{at a given discretization resolution} (e.g.\ grid-based planners).
+  \item \keyterm{Probabilistically complete}: $P(\text{success})\to 1$ as time/\#samples $\to\infty$ (basis of PRM, RRT).
+  \end{itemize}
+\item \keyterm{Online/offline}: \keyterm{offline} builds the whole plan in advance from a known model, then hands it to an executor; \keyterm{online} builds the plan incrementally while executing.
+\item \keyterm{Sensor-based?}: online \emph{and} interleaves sensing, computation, action (every Bug algorithm, \S3).
+\end{itemize}
+
+\begin{notebox}
+Optimality, completeness and computational complexity trade off against each other --- demanding one typically costs in the others. Full completeness becomes intractable as DoF grows, motivating the two weaker notions above.
+\end{notebox}
+
+\subsection{Performance Metrics}
+
+\begin{itemize}
+\item Path length / execution time / energy consumption
+\item Planning (pre-processing) time
+\item Safety --- clearance/distance kept from obstacles
+\item Robustness to disturbances and sensing/actuation noise
+\item Probability of success (randomized planners)
+\item Memory requirements and asymptotic complexity in problem size (DoF, \#obstacles, \dots)
+\end{itemize}
+\begin{notebox}
+Expensive offline pre-processing (building a roadmap once) pays off when the environment is static and many queries follow --- cost amortizes. In high-dimensional or frequently-changing environments this trade flips, motivating sampling-based planners (\S8). When a planner cannot compute a full roadmap in advance (high-complexity manipulator), probabilistic/sampling approaches are used instead.
+\end{notebox}
+
+\subsection{Contents}
+The rest of this summary is organized as follows.
+\begin{itemize}
+\item \textbf{\S2 Configuration Space} introduces degrees of freedom, orientation parametrizations, free space and obstacles, C-space topology, and collision detection.
+\item \textbf{\S3 Bug Algorithms} covers sensor-based, map-free local navigation strategies (Bug0, Bug1, Bug2, Tangent Bug).
+\item \textbf{\S4 Potential Functions} builds a scalar field from an attractive goal and repulsive obstacles and follows its gradient downhill.
+\item \textbf{\S5 Grid-Based Planners} presents the Brushfire distance transform and the Wave-Front planner built on top of it.
+\item \textbf{\S6 Roadmaps} covers the visibility graph, GVD, and GVG/HGVG.
+\item \textbf{\S7 Cell Decompositions} covers trapezoidal and boustrophedon decomposition, Canny's roadmap algorithm, approximate (quadtree) decomposition, and online/sensor-based coverage.
+\item \textbf{\S8 Roadmapping with Random Sampling} covers probabilistically complete planners (PRM, RRT, RRT*, SRT) that scale to high-dimensional C-spaces.
+\item \textbf{\S9 Kalman Filter} estimates robot state from noisy sensors: probabilistic estimation, the linear and extended Kalman filter, and Kalman filter-based SLAM.
+\item \textbf{\S10 Bayesian Methods} generalizes state estimation to non-Gaussian beliefs via recursive Bayesian filtering, histogram and particle-filter representations, and Bayesian SLAM.
+\end{itemize}
+
+\section{Configuration Space}
+
+The configuration space (C-space) reframes the planning problem: instead of reasoning about a robot's full physical shape, it treats the robot as a single point moving through the space of all possible configurations.
+
+\subsection{Basics}
+
+\keyterm{Workspace} $W$: physical ambient space the robot moves through ($\mathbb{R}^2$ or $\mathbb{R}^3$); $W_{free}=W\setminus\bigcup_i WO_i$. For an arm, often taken as the reachable space of the end-effector.
+
+\keyterm{Task space}: whatever space the task is most naturally expressed in (e.g.\ end-effector position).
+
+\keyterm{Configuration} $q$: smallest set of real-valued coordinates fully describing the position of every point of the robot; $q=(\text{position},\text{orientation})=(x,y,z,\dots)$.
+
+\keyterm{Configuration space} (C-space) $Q$: space of all configurations the robot can achieve.
+
+\keyterm{Dimension of $Q$ / DoF}: minimum \# parameters needed to specify $q$.
+
+These three spaces coincide only for a point robot in the plane; e.g.\ a 2-link planar arm has a 2D \emph{task} workspace (an annulus) but its C-space is $Q=T^2$ (torus, not $\mathbb{R}^2$), because each joint angle wraps around ($S^1$, not $\mathbb{R}$). \\
+Common robot models: single points, single rigid bodies, multiple rigid bodies with joints.
+
+\bookfig{figures/ext_torus.png}{The C-space of a 2R planar arm is a torus $T^2=S^1\times S^1$: each joint angle ($\theta_1$, $\theta_2$) independently wraps around a circle, so the two angles together sweep out the surface of a donut, not a flat square (cf.\ book Fig.\ 3.10).}{0.4}
+
+\keyterm{Non-holonomic robot}: cannot move freely on the C-space manifold in every direction (constrained), e.g.\ a car.
+
+\subsection{Degrees of Freedom}
+
+This section covers how to determine a robot's degrees of freedom (DoF) --- the dimension of its C-space --- using a different counting approach for each kind of mechanism: open chains, single rigid bodies, and closed chains.
+
+\textbf{Open chains (serial mechanisms).} DoF $=$ sum of DoF of each joint: revolute (R) or prismatic (P) joint $=1$, spherical (ball-and-socket) joint $=3$. \\
+A 2R planar arm has 2 DoF, $Q=S^1\times S^1=T^2$.
+
+\textbf{Single rigid body --- points-and-constraints method.} Fix points on the body one at a time, counting remaining freedom after each rigidity (distance) constraint.
+\begin{itemize}
+\item \textbf{2D:} point $A$ free in plane (2 DoF); $B$ fixed-distance from $A$ $\Rightarrow$ confined to a circle (1 DoF, angle); any third point already pinned by distances to $A,B$. Total \textbf{3 DoF} (2 translational $+$ 1 rotational).
+\item \textbf{3D:} $A$ free in space (3 DoF); $B$ confined to a sphere about $A$ (2 DoF); $C$ constrained by distances to \emph{both} $A,B$ $\Rightarrow$ confined to a circle about axis $AB$ (1 DoF); every other point now fixed. Total \textbf{6 DoF} (3 translational $+$ 3 rotational).
+\end{itemize}
+Equivalently from the group structure: a rigid body in $n$-space has $n(n-1)/2+n=n(n+1)/2$ DoF overall, of which $n(n-1)/2$ are rotational. Matches: $n=2\Rightarrow 3$ DoF, $n=3\Rightarrow 6$ DoF.
+
+\begin{defbox}{Grübler's Formula (closed chains / parallel mechanisms)}
+For $k$ links (incl.\ 1 fixed ground link, so $k-1$ movable) and $n$ joints:
+\[
+M = N(k-1) - \sum_{i=1}^{n} (N-f_i) = N(k-n-1) + \sum_{i=1}^{n} f_i
+\]
+$N=6$ (spatial/3D) or $3$ (planar/2D); $f_i$ = DoF of joint $i$ (1 for R/P, 3 for spherical). Valid only if joint constraints are independent.
+\end{defbox}
+\textit{Worked example:} planar 6-link, 7-revolute-joint mechanism ($N=3,k=6,n=7,f_i=1\ \forall i$):
+
+$M=3(6-7-1)+7\cdot1=3(-2)+7=\mathbf{1}$ DoF
+
+--- despite 6 links and 7 joints looking heavily constrained.
+
+\subsection{Parametrizations of Orientation}
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}p{2.2cm}p{2.55cm}p{2.55cm}@{}}
+\toprule
+Representation (\#nums) & Advantage & Drawback \\
+\midrule
+Rotation matrix $R\in SO(3)$ (9) &
+Composes by matrix mult.\newline embeds into $SE(3)$\newline no singularities &
+Over-parametrized: 9 numbers, 6 constraints ($R^TR=I$) \\[14pt]
+Euler angles $(\alpha,\beta,\gamma)$ (3) &
+Minimal: exactly \#DoF\newline intuitive (roll/pitch/yaw) &
+Gimbal lock (singularities)\newline many incompatible conventions\newline hard to concatenate \\[14pt]
+Unit quaternion $u\in S^3$ (4) &
+Compact, no singularities, cheap compose/inverse &
+Over-param.\ by 1 ($\|u\|=1$)\newline double-covers $SO(3)$ ($u,-u$ same rotation) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+$R\in SO(3)$: $R^TR=I$, $\det(R)=1$; columns of $R$ are the new coordinate axes expressed in the stationary frame.
+
+Euler (Z-Y-Z or roll-pitch-yaw) construction: $R_{xyz}(\alpha,\beta,\gamma)=R_z(\gamma)R_y(\beta)R_x(\alpha)$ (elementary rotations multiplied, applied right-to-left).
+
+Quaternion (axis $n$, $\|n\|=1$, angle $\theta$):
+\[
+u=\left(\cos\tfrac{\theta}{2},\ n_x\sin\tfrac{\theta}{2},\ n_y\sin\tfrac{\theta}{2},\ n_z\sin\tfrac{\theta}{2}\right)
+\]
+
+\bookfig{figures/ext_axis-angle-representation.png}{Axis-angle representation: a rotation by angle $\theta$ about a unit axis $n$, the geometric picture behind the quaternion formula above (cf.\ book Fig.\ E.2).}{0.4}
+
+\begin{democallout}
+\demo{https://eater.net/quaternions}
+\end{democallout}
+
+\begin{notebox}
+Half-angle $\theta/2$ is what makes quaternion multiplication compose rotations correctly; it is also why a full $360^\circ$ loop in $SO(3)$ is only a half-loop in $S^3$, giving the $u=-u$ double cover.
+\end{notebox}
+
+\subsection{Free Space and Obstacles}
+
+Obstacles in the workspace induce forbidden regions in C-space; this section defines those regions and describes how to compute them in practice.
+
+$Q=F\cup Q_{obs}$. For workspace obstacle $WO_i$, the induced \keyterm{C-space obstacle} is
+\[
+Q_{O_i}=\{q\in Q \mid R(q)\cap WO_i\neq\emptyset\}
+\]
+where $R(q)$ = set of points occupied by the robot at $q$.
+
+\keyterm{Free space}: $F=Q_{free}=Q\setminus\bigcup_i Q_{O_i}$ (open subset of $Q$).
+
+\keyterm{Obstacle space} $Q_{obs}$: closed subset (contains its boundary).
+
+\keyterm{Semi-free configuration}: robot touches an obstacle's boundary but not its interior, i.e.\ $q\in \mathrm{cl}(F)\setminus F$. A \emph{free} path never touches an obstacle ($c:[0,1]\to F$); a \emph{semi-free} path may graze one ($c:[0,1]\to \mathrm{cl}(F)$).
+\\
+\begin{notebox}
+\keyterm{Determine free space by discretization} (brute force): lay a grid on $Q$; for each grid point, place the robot at that exact configuration and run a direct collision test against workspace obstacles, coloring the cell free/occupied. Works for arbitrary robot shapes/DoF, but only \emph{resolution complete} --- a path through a gap between grid samples can be missed.
+\end{notebox}
+
+\subsection{Topology of Configuration Space}
+
+The shape of a C-space, not just its dimension, determines how a planner may reason about it; this section introduces topological vocabulary to describe its shape.
+
+\begin{defbox}{Homeomorphism}
+Bijection $\varphi:S\to T$ with $\varphi,\varphi^{-1}$ both continuous. $S,T$ then topologically the same (deformable into each other without cutting/gluing).
+\end{defbox}
+\begin{defbox}{Diffeomorphism}
+Smooth bijection $\varphi$ with smooth $\varphi^{-1}$. Strictly stronger (smoothness $\Rightarrow$ continuity, not conversely) $\Rightarrow$ every diffeomorphism is a homeomorphism, not vice versa. Circle $\leftrightarrow$ ellipse: diffeomorphic. Circle $\leftrightarrow$ ``racetrack'' (two straight sides + semicircular caps): only homeomorphic --- curvature is discontinuous at the 4 joints.
+\end{defbox}
+\begin{defbox}{Manifold}
+$S$ is a $k$-dimensional manifold if \emph{locally} homeomorphic to $\mathbb{R}^k$: every point has a neighborhood topologically like an open patch of $\mathbb{R}^k$ (even if globally curved, e.g.\ Earth's surface looks locally flat).
+\end{defbox}
+\keyterm{Chart}: pair $(U,\varphi)$, $U$ open in the manifold, $\varphi$ a diffeomorphism from $U$ onto an open subset of $\mathbb{R}^k$ (a local coordinate system). A single chart usually cannot cover a whole manifold (no single chart covers all of $S^1$).
+
+\keyterm{Atlas}: collection of charts, compatible (``$C$-related'') on overlaps, whose domains together cover $Q$; atlas $+$ $Q$ = differentiable manifold.
+
+\keyterm{Submanifold}: smooth subset inheriting the ambient space's differentiability, e.g.\ $S^1\subset\mathbb{R}^2$, $T^2\subset\mathbb{R}^3$ (a torus \emph{cannot} be embedded in $\mathbb{R}^2$, hence always drawn as a doughnut in 3D).
+
+\subsection{Point Representation}
+
+To simplify collision checking, reduce the robot to a \keyterm{point} and push its physical bulk onto the obstacles --- \keyterm{Minkowski sum}:
+
+For a circular robot of radius $r$: obstacle boundary offset outward by $r$, corners rounded into arcs of radius $r$.
+
+\bookfig{figures/ext_pointrep.png}{Point representation via Minkowski sum: the robot's bulk is absorbed into an enlarged obstacle, so the robot can now be treated as a single point (cf.\ book Fig.\ 3.5).}{0.5}
+
+Exact Minkowski-sum construction stays cheap only for simple shapes at fixed orientation; a rotating robot needs recomputation per orientation, which is why the discretized grid approach (\S2.4) is often used instead.
+
+\subsection{Collision Detection}
+
+Wrap the robot in a cheap \keyterm{bounding volume}, test that first, fall back to exact geometry only if ambiguous.
+\begin{itemize}
+\item \keyterm{Circle}: 1 distance calculation (center-to-center vs.\ sum of radii); loose for elongated/concave (e.g.\ L-shaped) robots.
+\item \keyterm{Axis-aligned rectangle}: up to 4 comparisons; tight only when aligned with robot axes; must be rebuilt on rotation.
+\item \keyterm{Hierarchical circle-splitting}: start with one enclosing circle, test. If possible collision, split into smaller child circles covering the robot's parts, recurse (test, split further where ambiguous) down to a minimum radius. --- Cheap, refines automatically near actual contact. Best default for irregular shapes.
+\end{itemize}
+
+\bookfig{figures/ext_collision_hull.png}{Different hulls require different number of tests (cf.\ Slides 1.22)}{0.85}
+
+\section{Bug Algorithms}
+
+The Bug family performs sensor-based, purely local navigation with no map and no pre-processing. Every variant assumes a point robot in the plane with perfect localization (it always knows its own position and the direction and distance to $q_{goal}$), zero prior knowledge of the obstacles, and either a contact sensor (Bug1/Bug2) or a finite-range radial sensor (Tangent Bug). Each alternates between two behaviors: \keyterm{motion-to-goal}, a straight line toward $q_{goal}$, and \keyterm{boundary-following}, tracing an obstacle's boundary. The \keyterm{m-line} is the segment from the most recent leave point (or $q_{start}$, initially) to $q_{goal}$.
+
+\subsection{Bug0}
+\begin{notebox}
+Not in the book.
+\end{notebox}
+\textbf{Strategy: naive.}
+\begin{enumerate}
+\item Head towards the goal.
+\item When hit point reached, follow the boundary until the direct line to goal is locally unobstructed.
+\item Continue from 1.
+\end{enumerate}
+
+\bookfig{figures/ext_bug0.png}{Bug0 example (cf.\ Slides 2.5)}{0.65}
+
+No termination guarantee: leaves at the \emph{first} opening $\Rightarrow$ can loop forever (spirals, or two obstacles re-triggering each other) (cf.\ Slides 2.6).
+
+\subsection{Bug1}
+\textbf{Strategy: exhaustive.}
+\begin{enumerate}
+\item Move toward $q_{goal}$ on the m-line.
+\item At hit point $q_i^H$: circumnavigate the \emph{entire} boundary, tracking distance-to-goal throughout.
+\item Return to leave point $q_i^L$ = boundary point closest to the goal (shorter retrace direction).
+\item Resume motion-to-goal from $q_i^L$.
+\item If the line $q_i^L\to q_{goal}$ re-intersects the same obstacle: no path exists.
+\end{enumerate}
+\textbf{Worst case:} $\displaystyle L_{\alg{Bug1}} \le d(q_{start},q_{goal}) + 1.5\sum_i p_i$, $\; p_i$ = perimeter of $i$-th obstacle.
+
+\textbf{Fails:} if $q_{start}$ starts inside a closed obstacle;
+
+\textbf{Drawback:} leave-vector can change the approach direction to the goal (problematic when grasping objects).
+
+\subsection{Bug2}
+\textbf{Strategy: greedy.} m-line is \emph{fixed} for the whole run (not recomputed per obstacle).
+\begin{enumerate}
+\item Move toward $q_{goal}$ on the fixed m-line.
+\item At hit point $q_i^H$: follow the boundary.
+\item Leave at a boundary point on the m-line that is closer to the goal than $q_i^H$. New leave point: $q_i^L$.
+\item Resume motion-to-goal from $q_i^L$.
+\item If the robot re-encounters $q_i^H$: no path exists.
+\end{enumerate}
+\textbf{Worst case:} $\displaystyle L_{\alg{Bug2}} \le d(q_{start},q_{goal}) + 0.5\sum_i n_i p_i$, $\; n_i$ = \# times the m-line crosses obstacle $i$.
+
+\textbf{Fails:} if $q_{start}$ inside a closed obstacle; also on spiral-shaped obstacles.
+\begin{notebox}
+Neither dominates: Bug2 wins on simple/convex-ish obstacles (small $n_i$, no cost for a full lap). Bug1 wins as obstacle complexity ($n_i$, m-line crossings) grows, since its bound does not depend on $n_i$ at all --- it always finds the globally best leave point on the boundary.
+\end{notebox}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#bug-algorithms}
+\end{democallout}
+
+\subsection{Tangent Bug}
+
+Tangent Bug extends the Bug idea with a finite-range sensor instead of contact-only sensing. Like Bug1/Bug2 it still alternates between the same two phases, motion-to-goal and boundary-following, but now a look-ahead heuristic, computed purely from whatever the sensor currently sees, decides both phases: while heading for the goal it picks the most promising sensed direction, and while following a boundary it continuously compares what has been seen so far against what is reachable right now to decide the exact instant to switch back to motion-to-goal --- rather than committing to a full lap (Bug1) or waiting for a fixed geometric condition on the m-line (Bug2).
+
+Robot has a finite-range ($R$) radial distance sensor, $360^\circ$. Heuristic distance to a sensed point $p$: $h(p)=d(x,p)+d(p,q_{goal})$.
+\textbf{Motion-to-goal:} move toward the sensed boundary/discontinuity point minimizing $h(p)$, until $h$ stops decreasing (local minimum).
+
+\bookfig{figures/fig_tangentbug_sensing.png}{The dotted circle is the robot's sensing range; $O_i$ are points of discontinuity in what the sensor can see. As the robot moves it re-evaluates which direction currently minimizes $h(p)$. (cf.\ book Fig.\ 2.7)}{0.75}
+
+\textbf{Boundary-following:} continuously track
+\begin{itemize}
+\item $d_{followed}$: shortest distance-to-goal among boundary points sensed so far on the followed obstacle;
+\item $d_{reach}$: best distance-to-goal achievable right now from a point currently within line-of-sight.
+\end{itemize}
+\textbf{Leave condition:} as soon as $d_{reach} < d_{followed}$, leave the boundary and resume motion-to-goal.
+
+\bookfig{figures/fig_tangentbug_localmin.png}{$M$ is where motion-to-goal first gets deflected by the obstacle (a local minimum of the heuristic). The dashed/dotted arc is boundary-following, continuously comparing $d_{followed}$ against $d_{reach}$ (cf.\ book Fig.\ 2.10).}{0.65}
+
+\begin{notebox}
+$R\to 0$ (contact-only): the leave condition $d_{reach}<d_{followed}$ collapses to "leave as soon as the current contact point beats every boundary point seen so far" --- a purely local record-beating test with no reference to any fixed line, exactly Bug0's rule, not Bug2's (which requires the leave point to lie on the fixed m-line). So Tangent Bug degenerates to \keyterm{Bug0}, inheriting its lack of a completeness guarantee. $R\to\infty$: can see past an entire obstacle silhouette to a much better route than boundary-following would ever find.
+\end{notebox}
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#bug-algorithms}
+\end{democallout}
+
+\subsection{Comparing the Family}
+
+\begin{center}\small
+\begin{tabular}{@{}p{1.9cm}p{1.6cm}p{1.8cm}p{1.6cm}@{}}
+\toprule
+Alg. & Sensor & Search strategy & Path quality \\
+\midrule
+\alg{Bug0} & contact & naive & no guarantee, may loop \\
+\alg{Bug1} & contact & exhaustive & predictable, often longer \\
+\alg{Bug2} & contact & greedy & often shorter, less predictable \\
+\alg{Tangent\-Bug} & finite-range radial & greedy + look-ahead & usually best \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Sensor range effect:} larger range $\Rightarrow$ can see more of an obstacle's silhouette before committing to boundary-following, giving shorter paths; contact-only sensing forces physical contact before any reaction is possible.
+
+\section{Potential Functions}
+
+Potential fields treat the goal as an attractive charge and obstacles as repulsive ones, then let the robot follow the resulting field downhill; this section builds that field and shows where the idea breaks.
+
+Idea: scalar $U(q)=U_{att}(q)+U_{rep}(q)$ over $F$; robot performs gradient descent, velocity $\propto-\nabla U(q)$. Ideal field: global min.\ at $q_{goal}$, no other local minima, $\to\infty$ near obstacles, smooth.
+
+\bookfig{figures/fig_potfield_charges.png}{Electrostatic intuition: the goal is a negative charge (attracts), the obstacle boundary a ring of positive charges (repels). The robot is a positive test charge and simply follows the field (cf.\ book Fig.\ 4.1).}{0.9}
+
+\textbf{Attractive.}
+
+Conic $U_{att}=\xi d$: bounded gradient, so commanded velocity stays safely capped far from the goal --- but the direction is discontinuous at $q_{goal}$ (chatter), and since the gradient magnitude never naturally decreases as the robot nears the goal, the robot doesn't slow down on its own and will overshoot or oscillate around $q_{goal}$ unless something else intervenes.
+
+Quadratic $U_{att}=\tfrac12\xi d^2$: gradient grows linearly $\Rightarrow$ unbounded commanded velocity far away, but decelerates smoothly and stops exactly at the goal.
+
+Standard fix — piecewise conic, matched ($C^1$) at threshold $d_{goal}^*$:
+\[
+U_{att}(q)=\begin{cases}\tfrac12\xi\,d(q,q_{goal})^2, & d\le d_{goal}^*\\[3pt] d_{goal}^*\xi\,d(q,q_{goal})-\tfrac12\xi (d_{goal}^*)^2, & d> d_{goal}^*\end{cases}
+\]
+(value \emph{and} gradient agree at $d=d_{goal}^*$: quadratic decelerates smoothly near the goal, linear caps cruising speed far away.)
+
+\textbf{Repulsive.} $\rho_0$: influence radius around an obstacle; $D(q)$: distance to nearest obstacle point.
+\[
+U_{rep}(q)=\begin{cases}\tfrac12\eta\left(\tfrac1{D(q)}-\tfrac1{\rho_0}\right)^2, & D(q)\le\rho_0\\[3pt] 0, & D(q)>\rho_0\end{cases}
+\]
+$D(q)\to0\Rightarrow U_{rep}\to\infty$ (blows up at contact); at $D(q)=\rho_0$ value \& gradient both $\to0$ smoothly (no discontinuity crossing into/out of influence).
+
+\begin{itemize}
+\item Advantage: cheap gradient evaluations, purely local.
+\item Disadvantage: \keyterm{local minima} — opposing obstacles can cancel the attractive pull ($\nabla U=0$, $q\ne q_{goal}$) $\Rightarrow$ robot stuck; no completeness guarantee; basic form ignores dynamic constraints (required force may exceed robot limits).
+\end{itemize}
+
+\bookfig{figures/fig_potfield_localmin.png}{Failure case: inside a concave (horseshoe) obstacle, the repulsive gradient from the near wall exactly balances the attractive pull toward $q_{goal}$ (cf.\ book Fig.\ 4.10).}{0.85}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#potential-functions}
+\end{democallout}
+
+\section{Grid-Based Planners}
+
+Grid-based planners discretize free space into a regular grid and compute a value at every cell. \textbf{Assumptions:} the workspace/C-space is known exactly in advance (offline, not sensor-based); it can be discretized into a grid fine enough to matter, with every cell tagged free or occupied; and the robot is modeled as a point moving between adjacent free cells. 
+
+\textbf{When to prefer them:} over potential fields, when a resolution-complete guarantee matters more than raw speed --- a grid-based planner is guaranteed to find a path if one exists at that resolution, whereas a potential field can get permanently stuck in a local minimum; over the sampling-based planners of \S8, when the C-space is low-dimensional enough.
+
+\subsection{Brushfire Planner}
+\begin{itemize}
+\item Discrete grid-based distance transform; generalizes the gradient/potential idea onto cells.
+\end{itemize}
+\begin{enumerate}
+\item \keyterm{Init}: all obstacle cells \emph{and} outer boundary cells $=1$ ("fire" seeded there simultaneously).
+\item \keyterm{Propagate}: each free cell gets value $=1+\min$(neighbor value); repeat (multi-source BFS) until every free cell has a wave value.
+\end{enumerate}
+\begin{itemize}
+\item Connectivity choice matters:
+  \begin{itemize}
+  \item \keyterm{4-connectivity}: cheaper; coarser ($L_1$/Manhattan-like) distance approximation.
+  \item \keyterm{8-connectivity}: costlier; closer to Euclidean distance.
+  \end{itemize}
+\item Here, two fires from different obstacles meet at an equal value $\Rightarrow$ the point is equidistant from $\ge2$ obstacles $\Rightarrow$ it lies on the Generalized Voronoi Diagram (GVD, \S6.2).
+\end{itemize}
+\begin{notebox}
+\keyterm{Mnemonic}, i.e.\ a memory aid for the relationship above: picture Brushfire as lighting a fire at every obstacle simultaneously and watching it flood outward in expanding rings, one wave per obstacle. The GVD is exactly the set of places where two of those separate waves collide --- \emph{"wavefront from obstacles, GVD where two wavefronts meet."}
+\end{notebox}
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#grid-based-planners}
+\end{democallout}
+
+\subsection{Wave-Front Planner}
+\begin{itemize}
+\item Wave-Front reuses Brushfire's propagation mechanism but changes where the fire starts. Brushfire ignites every obstacle cell simultaneously; Wave-Front instead seeds a single fire at the \emph{goal} cell (value $2$; obstacles $=1$) and lets it spread outward alone.
+\item Propagate wave value $k\to k{+}1$ to free neighbors (4- or 8-connectivity) until every reachable free cell has a wave value.
+\item Every free cell's wave value is now its distance, in moves, to the goal. From \emph{any} start cell, extract a path by walking \emph{downhill} (step to a strictly smaller neighbor wave value) all the way to the goal.
+\item Seeding at the goal (not the start) is what makes the planner immune to local minima: every free cell already carries a wave value that strictly decreases toward the goal, so greedy descent from any position is guaranteed to reach it --- no smooth gradient needed, just an exhaustive layer-by-layer flood fill from the goal outward.
+\item Path is shortest only w.r.t.\ the connectivity metric used: 4-conn.\ $\to$ $L_1$/Manhattan; 8-conn.\ $\to$ closer to Euclidean ($45^\circ$-increment diagonal steps).
+\end{itemize}
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#grid-based-planners}
+\end{democallout}
+
+\begin{warnbox}
+\keyterm{Curse of dimensionality}: every grid-based planner's cost is proportional to its number of cells, which grows like (resolution)$^{\dim Q}$ --- exponential in the dimension of $Q$. A grid fine enough to be useful in 2D or 3D quickly becomes computationally impractical for a 6-DoF arm or higher, which is exactly why the sampling-based planners of \S8 exist.
+\end{warnbox}
+
+\section{Roadmaps}
+Roadmaps represent the connectivity of free space as a compact network of 1D curves, built once offline and then queried cheaply many times.
+
+Idea: represent connectivity of $F$ as a network of 1D curves.
+
+\keyterm{Query}: (1) connect $q_{start},q_{goal}$ to the network, (2) graph search (Dijkstra/A*).
+
+\keyterm{Pro}: built once if obstacle topology is static.
+
+\keyterm{Con}: poor in dynamic environments.
+
+\subsection{Visibility Graph}
+\begin{itemize}
+\item Domain: planar, polygonal obstacles.
+\item Nodes: $q_{start}$, $q_{goal}$, all obstacle vertices.
+\item Edges: connect two nodes if the straight segment stays outside every obstacle's interior (may run along a boundary).
+\item Contains the geometric shortest path — but that path grazes obstacle vertices with \emph{zero clearance}.
+\item Complexity:
+  \begin{itemize}
+  \item \keyterm{Naive}: $O(n^3)$ (all pairs vs.\ all edges).
+  \item \keyterm{Rotational sweep}: $O(n^2\log n)$.
+  \item \keyterm{Optimal algorithm}: $O(n^2)$ time \& space (asymptotically tight --- graph can have $\Theta(n^2)$ edges).
+  \end{itemize}
+\item \keyterm{Reduced/simplified visibility graph}: keep only tangent edges between each obstacle pair, drastically fewer edges with shortest-path connectivity preserved:
+  \begin{itemize}
+  \item \keyterm{Supporting lines}: both obstacles on the same side.
+  \item \keyterm{Separating lines}: one obstacle per side.
+  \end{itemize}
+\end{itemize}
+
+\bookfig{figures/fig_visibility_graph.png}{Visibility graph for three polygonal obstacles (thin lines); the dashed line is the shortest path found by graph search between $q_{start}$ and $q_{goal}$ (cf.\ book Fig.\ 5.4).}{0.9}
+
+\begin{notebox}
+\keyterm{The optimal $O(n^2)$ algorithm}, briefly: rotational sweep rebuilds a sorted list of currently-visible edges from scratch at every one of the $n$ vertices, costing $O(n\log n)$ per vertex and $O(n^2\log n)$ overall. The optimal algorithm instead runs all $n$ sweeps together against one shared structure, updating it incrementally as it goes instead of re-sorting from zero each time; only $O(n^2)$ individual visibility changes ever happen in total across every sweep, and each is handled in $O(1)$ amortized time once the shared structure is in place, so the extra $\log n$ factor disappears.
+\end{notebox}
+
+\textit{Constructing the graph (naive version):}
+\begin{enumerate}
+\item Nodes $V \gets \{q_{start}, q_{goal}\} \cup \{\text{obstacle vertices}\}$.
+\item For every pair $u,v\in V$: test segment $uv$ against every obstacle edge; if no obstacle edge properly crosses it and no obstacle interior blocks it, add edge $(u,v)$ to the graph.
+\item Run Dijkstra/A* on the resulting graph from $q_{start}$ to $q_{goal}$.
+\end{enumerate}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#roadmaps}
+\end{democallout}
+
+\subsection{Voronoi Diagram (GVD)}
+\label{sssec:gvd}
+\begin{itemize}
+\item Opposite objective to visibility graph: maximize clearance, not minimize length.
+\item Def: locus of points equidistant to $\ge2$ nearest obstacles.
+\item Construction via Brushfire: grid init free$=0$/obstacle$=1$; propagate distance-to-nearest-obstacle; cells where two distinct waves meet at equal value $\in$ GVD.
+\item Complexity (continuous construction): $O(n\log n)$ time, $O(n)$ space.
+\end{itemize}
+
+\bookfig{figures/fig_gvd.png}{The GVD (thick curves) for a handful of obstacles --- every point on a curve is equidistant to (at least) two nearest obstacles (cf.\ book Fig.\ 5.9).}{0.55}
+
+\begin{defbox}{Deformation retract}
+The GVD is a \keyterm{deformation retract} of $Q_{free}$, not just an equidistance heuristic: any two connected configurations remain connected via a path lying entirely on the GVD, and every configuration can locally retract onto it (move toward max clearance) without the space's connectivity ever changing. That is why it works as a roadmap.
+\end{defbox}
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#roadmaps}
+\end{democallout}
+
+\subsection{GVG / HGVG}
+The 2D GVD generalizes to higher-dimensional workspaces, but the generalization is more delicate than it first looks, which is why it earns its own name and its own fix.
+
+\keyterm{Generalized Voronoi Graph (GVG)}: in an $m$-dimensional workspace, the right analogue of the GVD is the locus of points simultaneously equidistant to $m$ obstacles at once (not just 2). Requiring $m$-way equidistance is what keeps the result a 1-dimensional \emph{graph} of curves and junctions --- the natural shape for a roadmap; requiring only pairwise (2-obstacle) equidistance in $m>2$ dimensions instead produces an $(m-1)$-dimensional \emph{surface}, too high-dimensional to serve as a roadmap on its own.
+
+\begin{notebox}
+Unlike the 2D GVD (always connected whenever $Q_{free}$ is), the plain GVG in 3D+ is generically \emph{disconnected}: the surfaces of points equidistant to just two obstacles need not intersect at all, so the 1D curves built by demanding $m$-way equidistance can end up as separate, unconnected pieces even though the underlying free space is one connected region.
+\end{notebox}
+
+\bookfig{figures/fig_gvg_disconnected.png}{A rectangular room with a box in its interior: the GVG splits into two disconnected pieces --- an outer network around the room's walls and an inner "halo" loop around the box --- with no edge linking them (cf.\ book Fig.\ 5.19).}{0.55}
+
+\keyterm{Hierarchical GVG (HGVG)} repairs this by adding a second, coarser layer: on top of the (possibly disconnected) GVG, it adds \keyterm{second-order edges} --- curves equidistant to only 2 obstacles that additionally satisfy one extra distance-matching constraint involving a third obstacle --- chosen specifically to bridge the gaps between separate GVG components, stitching everything into a single connected roadmap that the plain GVG cannot guarantee by itself.
+
+Because the HGVG is meant to be traced \emph{online} by a real sensor-equipped robot rather than computed offline from a known map, it is often realized as a control law instead of a precomputed curve.
+
+\bookfig{figures/fig_hgvg_secondorder.png}{The same room, with the HGVG's second-order edges added --- the extra strands radiating out from each junction. These are what bridges the previously separate GVG pieces from the figure above into one connected roadmap (cf.\ book Fig.\ 5.20).}{0.55}
+
+\section{Cell Decompositions}
+Cell decomposition instead partitions free space directly into simple, non-overlapping cells connected by an adjacency graph, sidestepping the network-of-curves idea behind roadmaps. \keyterm{Exact}: cell union $=F$ exactly (no gaps/overlap).
+
+\subsection{Trapezoidal Decomposition}
+\begin{itemize}
+\item Sweep a vertical line; at \emph{every} obstacle vertex extend a vertical segment up/down until it hits another edge or the workspace boundary $\Rightarrow$ trapezoids (+ occasional triangles).
+\item Adjacency graph: 1 node/trapezoid; edge iff cells share a vertical boundary.
+\item Path: connect $q_{start}/q_{goal}$ to the midpoint of their own cell's vertical extension, search the adjacency graph, chain through extension midpoints via cell interiors.
+\item Complexity: $O(n\log n)$ time, $O(n)$ space.
+\item Weakness: a split at \emph{every} vertex over-segments open areas regardless of whether local connectivity actually changes there.
+\end{itemize}
+
+\begin{notebox}
+Also called \keyterm{Vertical Cell Decomposition} in some texts.
+\end{notebox}
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#cell-decompositions}
+\end{democallout}
+
+\subsection{Boustrophedon Decomposition}
+\begin{defbox}{Critical point / Morse decomposition}
+Boustrophedon is a \keyterm{Morse decomposition}: insert a boundary only where sweep-line connectivity actually changes (an interval appears/disappears/splits/merges) — a \keyterm{critical point} — not at every vertex.
+\end{defbox}
+
+\bookfig{figures/fig_trap_boustrophedon.png}{Same free space, two decompositions: trapezoidal (left) slices at every vertex; boustrophedon (right) only at critical points, so the concave obstacle needs fewer cells and a shorter coverage path (cf.\ book Fig.\ 6.9).}{0.95}
+
+\begin{itemize}
+\item Between critical points, a cell is swept back-and-forth $\Rightarrow$ ideal for \keyterm{coverage} tasks (painting, demining).
+\item Coarser adjacency graph than trapezoidal — nodes at non-critical vertices are redundant (dropping them loses no reachability).
+\end{itemize}
+
+Generalizes to non-polygonal/curved slicing patterns.
+
+\bookfig{figures/fig_curved_boustrophedon.png}{Curved-slice boustrophedon decomposition (cf.\ book Fig.\ 6.12).}{0.75}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#cell-decompositions}
+\end{democallout}
+
+\subsection{Cell Decomposition in Higher Dimensions}
+
+\subsubsection{Canny's Roadmap Algorithm}
+The difference between Canny's algorithm and the decompositions above is that trapezoidal and boustrophedon decomposition are inherently 2D geometric sweeps, while Canny's silhouette-sweep is dimension-agnostic. 
+
+This is not covered here; see book \S5.5.1.
+
+\subsubsection{The Halting Problem}
+\begin{itemize}
+\item \keyterm{Completeness}: a complete algorithm finds a path if one exists and reports none otherwise.
+\item Halting problem (proof by contradiction): no algorithm $H$ can decide in general whether an arbitrary program $X$ halts $\Rightarrow$ not all planning algorithms can be complete.
+\item \keyterm{Combinatorial} algorithms (cell decomposition, visibility graph, Voronoi diagram) \emph{are} complete — they cover every point of $C_{free}$ exactly $\Rightarrow$ motivates extending them to higher dimensions.
+\end{itemize}
+
+\subsubsection{Extension to n Dimensions}
+Generalizes trapezoidal/boustrophedon:
+\begin{enumerate}
+\item Pick a sweep dimension $x_i$.
+\item Sweep an $(n{-}1)$-dim.\ plane $\perp x_i$; stop \& record a new slice at each \keyterm{critical connectivity event}.
+\item Recurse: apply the same sweep-and-slice procedure within each $(n{-}1)$-dim.\ slice.
+\end{enumerate}
+Result: nested decomposition — $n$-cells, then $(n{-}1)$-cells within those, etc.
+
+\subsubsection{k-d Tree}
+A k-d tree indexes a fixed \emph{point set} (it partitions the points themselves, not $F$) so that nearest-neighbor and range queries against that set --- e.g.\ finding the milestone closest to a new PRM sample, or the tree node closest to $q_{rand}$ in RRT --- can be answered in roughly logarithmic time instead of scanning every point.
+\begin{itemize}
+\item Construction: pick dimension $i$ \& a point with coord.\ $x$; split points by $x_i$ (greater/less than); recurse on each half, cycling through dimensions with depth.
+\item Depth $O(\log n)$ if balanced; construction $O(kn\log n)$ ($k=$ \#dimensions).
+\item Downside: static point set — an environment change may need a substantial rebuild, not a local patch.
+\end{itemize}
+
+\bookfig{figures/fig_kdtree.png}{A 2D k-d tree: 8 points split by alternating axis (vertical first, horizontal next, and so on). Left: the resulting partition of the plane. Right: the same splits as a binary tree.}{0.95}
+
+\subsection{Approximate Cell Decomposition}
+While exact decompositions insist on cell union to equal $F$ exactly, approximate cell decompositions trade exactness for a simpler, adaptively-refined grid: it recursively subdivides space only where the map is still ambiguous, leaving large free or occupied regions as single big cells.
+\begin{itemize}
+\item Quadtree (2D) / Octree (3D): recursively split a square/cube cell into 4/8 equal children.
+\item Stop splitting once a cell is fully free, fully occupied, or a resolution/occupancy threshold is hit (e.g.\ $\ge95\%$ occupied).
+\item Cell union only \emph{under}-approximates $F$; mixed boundary cells are left ambiguous — \emph{not} exact.
+\item Advantage: large open/occupied regions $=$ few big cells (memory savings); a local environment change $\Rightarrow$ only the affected branch is recomputed — cheap, vs.\ the full rebuild exact decompositions and k-d trees require.
+\end{itemize}
+
+\bookfig{figures/ext_quadtree.jpg}{A quadtree recursively splits mixed cells into quadrants until each is fully free/occupied, or a resolution limit is reached (cf. \ Slides 3.11).}{0.8}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#cell-decompositions}
+\end{democallout}
+
+\section{Roadmapping with Random Sampling}
+The running time of the classical, exact approaches above grows exponentially with C-space dimension, which is why sampling-based planners instead scale to high-DoF robots. The price is that they give up resolution- or exact-completeness for the weaker \keyterm{probabilistic completeness}: $P(\text{solution found}\mid\text{exists})\to1$ as \#samples or time$\to\infty$.
+
+\subsection{Sampling Basics}
+Correct parametrization per space matters — get it wrong and sample density silently biases the whole downstream planner:
+\begin{itemize}
+\item Unit interval / square / cube: draw $r\in[0,1]$ i.i.d.\ per dimension.
+\item Interval $[a,b]$: $(b-a)r+a,\ r\in[0,1]$.
+\item Angle: $\theta\in[0,2\pi)$ uniform.
+\item Rotations: representation-dependent. SO(2) $=$ uniform angle directly. SO(3): sample the axis uniformly on the unit sphere, then the angle about it separately (axis-angle).
+\end{itemize}
+
+\subsection{Coverage, Connectivity, and Expansiveness}
+\keyterm{Coverage}: milestones distributed so (almost) any free point sees one via a straight line.
+
+\keyterm{Connectivity}: every milestone reachable from every other — hardest to guarantee near narrow passages.
+\begin{defbox}{$(\epsilon,\alpha,\beta)$-expansiveness}
+\begin{itemize}
+\item $reach(x)=\{y\in F\mid \overline{xy}\subset F\}$: the straight-line visibility set of $x$.
+\item $F$ is $\epsilon$-\keyterm{good} if $\mu(reach(x))\ge\epsilon\,\mu(F)$ for every $x\in F$ --- every point sees at least an $\epsilon$-fraction of all of $F$.
+\item The $\beta$-\keyterm{lookout} of a subset $S\subset F$: $lookout_\beta(S)=\{x\in S\mid \mu(reach(x)\setminus S)\ge\beta\,\mu(F\setminus S)\}$ --- the points of $S$ that still see a $\beta$-fraction of the rest of $F$.
+\item $F$ is $(\epsilon,\alpha,\beta)$-\keyterm{expansive} if it is $\epsilon$-good \emph{and}, for every connected $S\subset F$, $\mu(lookout_\beta(S))\ge\alpha\,\mu(S)$ --- an $\alpha$-fraction of $S$ always has a $\beta$-lookout onto the rest of $F$.
+\end{itemize}
+\end{defbox}
+Theorem: in an $(\epsilon,\alpha,\beta)$-expansive space, sampling
+\[
+n\ \approx\ \frac{8}{\epsilon\alpha}\ln\frac{8}{\epsilon\alpha\delta}\ +\ \frac3\beta
+\]
+milestones connects each free-space component with probability $\ge1-\delta$. Dominant term scales as $\tfrac1{\epsilon\alpha}$ (log-corrected), plus an additive $\tfrac1\beta$ term --- depends on \emph{all three} constants, not just one. Smaller $\epsilon,\alpha,\beta$ (more constrained space) $\Rightarrow$ exponentially more milestones needed. A narrow passage $\Leftrightarrow$ small $\beta$ in that region.
+\begin{itemize}
+\item Limitation: the theorem doesn't say when to \emph{stop} growing the roadmap.
+\item Improving connectivity: more uniform samples; random-walk resampling; path correction; obstacle-based sampling (OBPRM).
+\end{itemize}
+
+\subsection{Multi-Query: PRM}
+PRM spends time up front building one roadmap that covers the whole free space, then answers many $q_{start}/q_{goal}$ queries against it cheaply --- worthwhile whenever the environment is static and will be queried repeatedly.
+
+\subsubsection{Basic PRM}
+\begin{enumerate}
+\item Sample random configurations; keep collision-free ones as \keyterm{milestones}.
+\item Find neighbors: $k$-nearest, or all within a fixed radius.
+\item Connect candidate pairs with a local planner; add the edge if collision-free.
+\item Repeat 1--3 until the roadmap is "dense enough."
+\end{enumerate}
+Query: connect $q_{start},q_{goal}$ to the roadmap (same local planner), then graph search.
+\begin{itemize}
+\item Advantages: probabilistically complete; scales to high dimension; fast repeated queries once built.
+\item Weakness: \keyterm{narrow passages} — uniform sampling density $\propto$ free-space volume $\Rightarrow$ thin corridors get few/no milestones $\Rightarrow$ disconnected roadmap despite a path existing.
+\end{itemize}
+
+\bookfig{figures/fig_prm.png}{A PRM roadmap for a point robot: circles are collision-free milestones, edges are validated straight-line connections to $k{=}3$ nearest neighbors (cf.\ book Fig.\ 7.3).}{0.8}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#sampling-based}
+\end{democallout}
+
+\subsubsection{OBPRM}
+Obstacle-based sampling — biases milestones toward obstacle surfaces, where narrow passages live:
+\begin{enumerate}
+\item Find a colliding configuration (inside a C-obstacle).
+\item Pick a random direction; step along it until reaching a free configuration.
+\item Binary-search the segment between the colliding \& free points $\to$ converge on the boundary; the boundary point becomes the new milestone.
+\end{enumerate}
+
+\bookfig{figures/ext_obprm.png}{OBPRM pushes samples that start inside an obstacle outward until they land on its boundary, directly seeding milestones where narrow passages live.}{0.85}
+
+\subsubsection{Other Sampling Strategies}
+\begin{itemize}
+\item \keyterm{Gaussian sampler}: sample $q_1$ uniform; $q_2$ at a step size Gaussian-distributed offset from $q_1$; keep as milestone only if \emph{exactly one} of $q_1,q_2$ collides.
+\item \keyterm{Bridge test}: sample two \emph{colliding} configurations; keep their midpoint as a milestone only if it is collision-free — literally "bridges" a thin gap.
+\item \keyterm{GVD-retraction sampling}: retract/push samples onto the GVD — passes through the max-clearance middle of any passage by construction.
+\item \keyterm{Random-walk resampling}: on collision, keep wandering in random directions (up to max.\ length $L$) instead of discarding the sample outright.
+\item \keyterm{Path correction / smoothing}: let a preliminary path cut slightly through obstacles, then push the violating portion back to the nearest free boundary afterward.
+\item \keyterm{Visibility-based sampling}: keep a candidate milestone only if it (1) cannot be connected to any existing node or (2) connects $\ge2$ existing components together (cf.\ book \S7.1.3).
+\end{itemize}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#other-sampling-strategies}
+\end{democallout}
+
+\subsection{Single-Query Planners}
+Answer one $q_{start}/q_{goal}$ query fast; no need to cover all of $F$.
+\begin{notebox}
+\keyterm{Prefer single-query planners} when only one query is needed or when the environment changes often enough that maintaining one big roadmap isn't worth it.
+\end{notebox}
+
+\subsubsection{Expansion + Connection (Single-Query PRM)}
+Grow two trees, rooted at $q_{start}$ and $q_{goal}$; alternate \keyterm{Expansion} and \keyterm{Connection}:
+\begin{enumerate}
+\item Pick a node $x$ with probability $\propto 1/w(x)$ ($w(x)=$ \#nodes within a fixed radius, incl.\ $x$) — favors sparse regions.
+\item Randomly sample $k$ points $y_1,\dots,y_k$ around $x$.
+\item Add $y_i$ to the tree with probability related to $1/w(y_i)$ (again favoring sparse regions), provided $y_i$ is collision-free \emph{and} visible from $x$.
+\item If a node in the start tree and a node in the goal tree are close \emph{and} mutually visible: connect them, terminate.
+\end{enumerate}
+Termination: trees connect, or max.\ \#expansion/connection steps reached.
+
+\bookfig{figures/fig_rrt_tree.png}{A tree-based planner's search tree for a real spacecraft-docking problem. (Phillips \& Kavraki; cf.\ book Fig.\ 7.11.)}{0.65}
+
+\subsubsection{EST and SBL}
+\keyterm{EST (Expansive-Spaces Trees)}: grow tree(s) from $q_{start}$ (optionally a second from $q_{goal}$).
+\begin{enumerate}
+\item Pick an existing node with probability inversely related to local neighbor density.
+\item Sample a candidate configuration near the picked node.
+\item Add it \emph{only if} a local planner successfully connects it to the picked node — unlike PRM, which keeps every collision-free sample unconditionally.
+\end{enumerate}
+Merge two trees by attempting to connect a newly added node in one to its nearest neighbors in the other.
+
+\bookfig{figures/fig_est_merge.png}{Merging two EST trees: $q$ was just added to $T_{init}$; the local planner tries to connect it to its closest configurations $x,y$ in $T_{goal}$, failing at $x$ but succeeding at $y$ (cf.\ book Fig.\ 7.13).}{0.95}
+
+\begin{notebox}
+Picking a node can be implemented by overlaying a \keyterm{coarse grid} on $C$ and picking a sparse, non-empty cell to expand into. This provides a near-$O(1)$ lookup instead of weighing every existing node in each iteration.
+\end{notebox}
+
+\keyterm{SBL (Single-query, Bi-directional, Lazy collision-checking)}: two EST-style trees, but \emph{defers all edge collision checks} until an edge becomes part of a candidate start$\to$goal path — saves collision-checking effort on edges that never end up mattering.
+
+\keyterm{Prefer SBL} when collision checking is the bottleneck (e.g.\ high-DoF or complex-geometry robots).
+
+\subsection{RRT}
+The Rapidly-exploring Random Tree is the most common single-query planner in practice, prized for how quickly it explores.
+
+\subsubsection{Basic RRT}
+Grow a tree (uni- or bi-directional, from start/goal) via greedy nearest-extension:
+\begin{enumerate}
+\item Sample random $q_{rand}$.
+\item Find the nearest existing node $q_{near}$.
+\item Extend toward $q_{rand}$ by at most step size $\Delta q$.
+\item Add the new node if the segment is collision-free; else stop at first collision.
+\end{enumerate}
+The nearest-neighbor rule makes the tree grow into its largest (least-explored) Voronoi regions $\Rightarrow$ rapid, roughly-uniform exploration as a side effect.
+
+\bookfig{figures/fig_rrt_extend.png}{Adding a new configuration to an RRT: $q_{rand}$ is sampled uniformly in $Q_{free}$; $q$ is the closest node to it; only $q_{new}$ and $(q,q_{new})$ are added to the tree (cf.\ book Fig.\ 7.14).}{0.75}
+
+\begin{notebox}
+Bias toward $q_{goal}$ (e.g.\ 5\% of the time) can help find a path faster.
+\end{notebox}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#sampling-based}
+\end{democallout}
+
+\subsubsection{Kinodynamic RRT}
+For systems with differential / nonholonomic constraints (e.g.\ a car): extend by \keyterm{forward-simulating} a short trajectory of the robot's actual equations of motion (control inputs applied over a small $\Delta t$) from $q_{near}$, instead of a straight line.
+
+The tree then contains dynamically-feasible motions. Standard PRM/RRT (straight-line local planner) cannot be used directly here.
+
+\subsubsection{RRT*}
+Plain RRT is \emph{not} asymptotically optimal — the first path found is kept as-is, never improved. RRT* adds a \keyterm{rewiring} step on every new sample $q_{new}$:
+\begin{enumerate}
+\item Examine existing nodes within a shrinking radius around $q_{new}$ — not just the single nearest node.
+\item \keyterm{Choose best parent}: connect $q_{new}$ to whichever nearby node gives the lowest cost-from-root (not necessarily the geometrically nearest one).
+\item \keyterm{Rewire}: for each of those nearby nodes, re-parent it through $q_{new}$ if that would lower its own cost-from-root.
+\end{enumerate}
+As $n\to\infty$, cost from root to any node converges to the optimal cost $\Rightarrow$ \keyterm{asymptotically optimal}.
+
+\keyterm{Prefer plain RRT} when any valid path is fast enough; \keyterm{Prefer RRT*} when path quality matters and there is time/samples to spare.
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#sampling-based}
+\end{democallout}
+
+\subsection{Sampling-Based Roadmap of Trees}
+\keyterm{SRT} combines PRM with tree planners: it builds a PRM-style roadmap whose nodes are not single configurations but whole \emph{trees}, each grown by a single-query planner like EST or RRT.
+\begin{enumerate}
+\item \keyterm{Add trees}: sample a root uniformly in $F$, then grow a tree from it with a sampling-based tree planner (EST/RRT).
+\item \keyterm{Add edges}: for each tree $T_i$, find its closest and a few random neighboring trees; attempt to connect $T_i$ to each via the same tree planner, growing both trees further if needed. Two trees merge into one roadmap component as soon as any configuration in one connects to any configuration in the other.
+\end{enumerate}
+\keyterm{Prefer SRT} on problems so difficult that a single-query planner would need one enormous tree to connect $q_{start}$ to $q_{goal}$ directly.
+
+\bookfig{figures/fig_srt_roadmap.png}{An SRT roadmap: each light-gray blob is one tree (black square = root); dashed lines are edges that merged two trees together (cf.\ book Fig.\ 7.16).}{0.9}
+
+\subsection{Path Post-Processing}
+\keyterm{Homotopic paths}: two paths with the same endpoints are homotopic if one can be continuously deformed into the other without leaving $F$. Matters because it fixes which "side" of obstacles a smoothed path passes on relative to the original.
+\begin{itemize}
+\item \keyterm{Smoothing / shortcutting}: remove zig-zag from a sampling-based path by directly connecting mutually-visible, non-consecutive nodes, or via energy-based nonlinear optimization.
+\item \keyterm{PRM path repair}: if an extracted path (or edge) turns out infeasible, locally resample / binary-search push it back into $F$ near the failure point, rather than rebuilding the whole roadmap.
+\end{itemize}
+
+\bookfig{figures/fig_prm_shortcut.png}{Greedy shortcutting of a PRM path: starting from $q_{init}$, repeatedly try to connect straight to the current target, falling back one node at a time until a connection succeeds (cf.\ book Fig.\ 7.7).}{0.85}
+
+\section{Kalman Filter}
+Every planner so far has assumed either an exact map or perfect sensing. This chapter drops that assumption: the robot's knowledge of its own state now comes from imperfect, noisy measurements, and the job is to estimate that state as well as possible from them.
+
+\subsection{Probabilistic Estimation}
+Instead of maintaining a single hypothesis of where the robot is, \keyterm{probabilistic estimation} maintains an entire probability distribution over possible states, updated in a two-step cycle:
+\begin{itemize}
+\item \keyterm{Prediction}: propagate the current belief forward through the motion model. Since the model is imperfect, this step always \emph{loses} information --- the distribution spreads out.
+\item \keyterm{Update}: fuse the predicted belief with a new sensor reading. This step \emph{gains} information --- the distribution sharpens.
+\end{itemize}
+\begin{notebox}
+Why not just integrate commands (\keyterm{dead reckoning})? Because errors accumulate unboundedly and the estimate eventually becomes meaningless.
+\end{notebox}
+
+\bookfig{figures/fig_odometry_drift.png}{Real odometry trace of a mobile robot (thin curve) against the room it actually drove around (gray floor plan): pure dead reckoning drifts far enough that the trace no longer resembles the room at all --- exactly the unbounded error growth the notebox above warns about (cf.\ book Fig.\ 8.1).}{0.75}
+
+The Kalman filter is the special case of this idea where the belief is always a \keyterm{Gaussian} (mean $\hat x$, covariance $P$) --- more general, non-Gaussian versions are the subject of \S10.
+
+\subsection{Linear Kalman Filter}
+Assume a linear discrete-time system with zero-mean white Gaussian noise:
+\[
+x(k{+}1)=F(k)x(k)+G(k)u(k)+v(k)
+\]
+\[
+y(k)=H(k)x(k)+w(k)
+\]
+\begin{itemize}
+\item $x$: state; 
+\item $u$: control input (e.g.\ commanded velocity); 
+\item $y$: sensor output; 
+\item $v$: process noise; 
+\item $w$: measurement noise.
+\item $F(k)$: dynamics of the system.
+\item $G(k)$: how the control input affects the state.
+\item $H(k)$: how the state is mapped to the sensor.
+\end{itemize}
+
+\begin{defbox}{Kalman Filter}
+\textbf{Prediction:}
+\[
+\hat x(k{+}1|k)=F\hat x(k|k)+Gu(k)
+\]
+\[
+P(k{+}1|k)=FP(k|k)F^T+V
+\]
+\textbf{Update:}
+\[
+\nu=y(k{+}1)-H\hat x(k{+}1|k)
+\]
+\[
+S=HP(k{+}1|k)H^T+W
+\]
+\[
+R=P(k{+}1|k)H^TS^{-1}
+\]
+\[
+\hat x(k{+}1|k{+}1)=\hat x(k{+}1|k)+R\nu
+\]
+\[
+P(k{+}1|k{+}1)=P(k{+}1|k)-RHP(k{+}1|k)
+\]
+\end{defbox}
+\begin{itemize}
+\item $\hat x(k|k)$, $P(k|k)$: \keyterm{posterior} --- state estimate and its error covariance at step $k$, i.e.\ \emph{after} incorporating $y(k)$.
+\item $\hat x(k{+}1|k)$, $P(k{+}1|k)$: \keyterm{prior} --- the same, \emph{predicted} one step ahead before seeing $y(k{+}1)$.
+\item $\nu$: \keyterm{innovation} --- how far the actual measurement $y(k{+}1)$ landed from what was predicted, $H\hat x(k{+}1|k)$.
+\item $S$: \keyterm{innovation covariance} --- how much spread to expect in $\nu$: the predicted state's own uncertainty plus the sensor's noise $W$.
+\item $R$: \keyterm{Kalman gain} --- how much of $\nu$ to actually apply to correct the estimate, per state dimension. A "large" $R$ means the sensor reading is more reliable than the prediction; a "small" $R$ means the opposite.
+\end{itemize}
+
+\keyterm{Worked example:} robot moving on a line. 
+
+State $x=[p,v]^T$ (position, velocity), $\Delta t=1$, no control input, a sensor that reads position only:
+\[
+F=\begin{bmatrix}1&1\\0&1\end{bmatrix},\qquad H=\begin{bmatrix}1&0\end{bmatrix}
+\]
+Start with $\hat x(0|0)=[0,1]^T$, $P(0|0)=\begin{bmatrix}0.1&0\\0&0.1\end{bmatrix}$, process noise $V=\begin{bmatrix}0.01&0\\0&0.04\end{bmatrix}$, measurement noise $W=0.25$, and observe $y(1)=1.3$.
+
+\textbf{Prediction:}
+\[
+\hat x(1|0)=F\hat x(0|0)=[1,\,1]^T
+\]
+\[
+P(1|0)=FP(0|0)F^T+V=\begin{bmatrix}0.21&0.1\\0.1&0.14\end{bmatrix}
+\]
+\textbf{Update:}
+\[
+\nu=y(1)-H\hat x(1|0)=1.3-1=0.3
+\]
+\[
+S=HP(1|0)H^T+W=0.21+0.25=0.46
+\]
+\[
+R=P(1|0)H^TS^{-1}=[0.457,\,0.217]^T
+\]
+\[
+\hat x(1|1)=\hat x(1|0)+R\nu=[1.137,\,1.065]^T
+\]
+\[
+P(1|1)=P(1|0)-RHP(1|0)=\begin{bmatrix}0.114&0.054\\0.054&0.118\end{bmatrix}
+\]
+Position moved from $1$ (pure prediction) most of the way to the measurement $1.3$, since $R$'s first entry ($0.457$) is fairly large; velocity also nudged up ($1\to1.065$) purely through the $p$-$v$ correlation carried in $P$. And $P(1|1)$ is tighter than $P(1|0)$ in every entry --- "update sharpens the belief".
+
+\keyterm{Observability}: the pair $(F,H)$ must be observable for $\hat x$ to actually converge to the true state --- i.e.\ enough of the state must eventually affect some output. 
+
+\keyterm{Prefer the linear KF} when the motion and sensor models really are linear (or close enough): it is cheap, closed-form, and exactly optimal.
+
+\subsection{Extended Kalman Filter}
+Most real robot models are nonlinear: 
+\[
+x(k{+}1)=f(x(k),u(k),k)+v(k)
+\]
+\[
+y(k)=h(x(k),k)+w(k)
+\]
+The \keyterm{Extended Kalman Filter (EKF)} linearizes about the current estimate at every step, then reuses the same prediction/update equations with the Jacobians
+\[
+F(k)=\left.\frac{\partial f}{\partial x}\right|_{\hat x(k|k)}
+\]
+\[
+H(k{+}1)=\left.\frac{\partial h}{\partial x}\right|_{\hat x(k{+}1|k)}
+\]
+the rest of the formulas in \S9.2 are unchanged. 
+
+\keyterm{The key point}: $F(k)$ and $H(k{+}1)$ are no longer fixed matrices --- they are recomputed \emph{at every step}.
+
+\keyterm{Worked example:} range-bearing localization.
+
+State $x=[x_r,y_r,\theta_r]^T$; known landmarks at $(x_{\ell_j},y_{\ell_j})$; each measurement gives range and bearing to one landmark,
+\[
+h_j(x)=\begin{bmatrix}\sqrt{(x_r-x_{\ell_j})^2+(y_r-y_{\ell_j})^2}\\[2pt] \operatorname{atan2}(y_r-y_{\ell_j},\,x_r-x_{\ell_j})-\theta_r\end{bmatrix}
+\]
+Differentiating $h_j$ w.r.t.\ $(x_r,y_r,\theta_r)$, at range $r$ to the landmark:
+\[
+H_j=\begin{bmatrix}-\tfrac{x_{\ell_j}-x_r}{r} & -\tfrac{y_{\ell_j}-y_r}{r} & 0\\[4pt] \tfrac{y_{\ell_j}-y_r}{r^2} & -\tfrac{x_{\ell_j}-x_r}{r^2} & -1\end{bmatrix}
+\]
+
+Landmark at $(3,4)$, current estimate $\hat x=(0,0,0)$ --- a 3-4-5 triangle, so $r=5$ --- with $P=\mathrm{diag}(0.05,0.05,0.02)$ and sensor noise $W=\mathrm{diag}(0.04,0.01)$. Predicted measurement:
+\[
+h(\hat x)=[5,\ \operatorname{atan2}(4,3)]^T=[5,\ 0.927]^T
+\]
+Plugging $r=5$, $(x_\ell{-}x_r,y_\ell{-}y_r)=(3,4)$ into $H_j$ above:
+\[
+H=\begin{bmatrix}-0.6&-0.8&0\\0.16&-0.12&-1\end{bmatrix}
+\]
+A real reading $y=[5.2,\,0.90]^T$ gives innovation $\nu=y-h(\hat x)=[0.2,\,{-}0.027]^T$. Running $H$, $\nu$ through exactly the same $S,R$ formulas as \S9.2 (with $W$ in place of the linear KF's scalar noise) yields
+\[
+\hat x_{new}=[{-}0.074,\ {-}0.084,\ 0.017]^T
+\]
+--- a small correction in \emph{every} state dimension from a single sighting of \emph{one} landmark, because $H$ couples range/bearing error back into $x_r,y_r,\theta_r$ all at once.
+
+\begin{notebox}
+\keyterm{Data association}: if it isn't known \emph{which} landmark a measurement belongs to, compute the innovation $\nu_{ij}$ against every candidate landmark $j$, weight it by its own uncertainty via the Mahalanobis statistic $\chi^2_{ij}=\nu_{ij}S_{ij}^{-1}\nu_{ij}^T$, and assign the measurement to whichever landmark minimizes $\chi^2_{ij}$. Range-only localization is the same construction with the bearing row simply dropped from $h$ and $H$.
+\end{notebox}
+
+\bookfig{figures/fig_ekf_localization.png}{EKF localization along a real path (dotted): each ellipse is the estimate's uncertainty at a landmark sighting, shrinking as more measurements are fused in (cf.\ book Fig.\ 8.8).}{0.85}
+
+\keyterm{Prefer the EKF} over the linear KF whenever the motion or sensor model is nonlinear --- true for almost every real mobile robot. For strongly nonlinear or multimodal problems, prefer a particle filter (\S10.2) instead.
+
+\subsection{Kalman Filter for SLAM}
+The key idea: augment the state vector to hold \emph{both} the robot pose \emph{and} every landmark position, then estimate the whole thing with one filter. Landmarks are static, so their block of $F$ is simply the identity.
+\begin{itemize}
+\item \keyterm{Simple SLAM}: linear case --- the robot measures its relative displacement to each (uniquely identified) landmark directly, so $y_i(k)=[x_{\ell_i}-x_r,\ y_{\ell_i}-y_r]^T(k)+w_i(k)$ is already linear in the augmented state; plug into the linear KF equations directly.
+\item \keyterm{Range and bearing SLAM}: the more realistic case --- same augmented-state idea, but $h$ is nonlinear.
+\end{itemize}
+The joint covariance is block-structured, robot block first:
+\[
+P=\begin{bmatrix}P_{RR}&P_{RL}\\P_{RL}^T&P_{LL}\end{bmatrix}
+\]
+\begin{notebox}
+$P_{RR}$: robot pose covariance. $P_{LL}$: landmark-position covariance (one block per landmark, growing with map size). 
+
+$P_{RL}$: robot-landmark \emph{cross}-covariance --- as landmarks are observed repeatedly, this off-diagonal block fills in, correlating the robot's pose estimate with \emph{every} landmark estimate. This is what lets a repeated sighting of a landmark close retroactively sharpen the robot's own pose estimate \keyterm{loop closure} --- but it is also why full KF-SLAM's covariance update scales quadratically in the number of landmarks.
+\end{notebox}
+\keyterm{Prefer KF/EKF-SLAM} when the landmark count is modest and the belief stays close to unimodal; for large-scale or highly ambiguous mapping problems, prefer the particle-filter/optimization-based methods of \S10.3.
+
+\subsection{Unscented Kalman Filter}
+The EKF's Jacobian linearization is only \emph{first-order} accurate, and breaks down under strong nonlinearity or when $f,h$ are hard (or impossible) to differentiate. The \keyterm{Unscented Kalman Filter (UKF)} sidesteps linearization entirely: instead of approximating the \emph{function}, it approximates the \emph{distribution} with a small set of deterministic sample points, then pushes every point through the true, unmodified $f$ or $h$.
+
+\keyterm{Unscented Transform (UT)}: for an $n$-dimensional Gaussian $(\hat x,P)$, pick $2n{+}1$ \keyterm{sigma points} that exactly reproduce its mean and covariance, propagate each one through the true nonlinear function, then reconstruct a Gaussian from the transformed points' weighted mean/covariance. This matches the true mean and covariance to second order in a Taylor expansion --- one order better than the EKF's first-order Jacobian, at a cost of $2n{+}1$ function evaluations instead of one Jacobian.
+
+\begin{defbox}{Unscented Transform}
+\textbf{Sigma points} ($\lambda=\alpha^2(n{+}\kappa)-n$):
+\[
+\chi_0=\hat x,\qquad \chi_i=\hat x\pm\Big(\sqrt{(n{+}\lambda)P}\Big)_i
+\]
+\textbf{Weights:}
+\[
+W_0^{(m)}=\frac{\lambda}{n+\lambda},\quad W_0^{(c)}=\frac{\lambda}{n+\lambda}+(1{-}\alpha^2{+}\beta)
+\]
+\[
+W_i^{(m)}=W_i^{(c)}=\frac{1}{2(n+\lambda)},\quad i=1,\dots,2n
+\]
+\end{defbox}
+\begin{itemize}
+\item $\chi_i$: the $2n{+}1$ sigma points; $\pm$ ranges over each of the $n$ columns of the matrix square root, giving $n$ points on each side of $\hat x$.
+\item $\alpha$: spread of the sigma points around $\hat x$ (small, e.g.\ $10^{-3}$). $\kappa$: secondary scaling, usually $0$. $\beta$: encodes prior knowledge of the distribution's shape ($\beta{=}2$ is optimal for a Gaussian).
+\item $W^{(m)}$: weights for recombining the mean; $W^{(c)}$: weights for recombining the covariance (differ only at $i{=}0$).
+\end{itemize}
+
+\keyterm{UKF algorithm}: 
+
+\textbf{Prediction} --- generate sigma points from $(\hat x(k|k),P(k|k))$, push each through $f$, recombine with the weights above to get $(\hat x(k{+}1|k),P(k{+}1|k))$. 
+
+\textbf{Update} --- generate new sigma points from the predicted $(\hat x(k{+}1|k),P(k{+}1|k))$, push each through $h$, recombine to get the predicted measurement and its covariance $S$, plus the state-measurement cross-covariance; then apply the same gain-and-correct step as the linear KF ($R=P_{xy}S^{-1}$), but with these sigma-point-derived quantities in place of $HPH^T$ and $PH^T$.
+
+\keyterm{Prefer the UKF} over the EKF when $f$ or $h$ is strongly nonlinear, discontinuous, or inconvenient to differentiate (no Jacobians needed at all); it is more accurate and often not much more expensive, though still cheaper than a particle filter (\S10.2), which needs far more than $2n{+}1$ samples for comparable accuracy.
+
+\section{Bayesian Methods}
+The Kalman filter is really just one special case of a more general recipe --- recursive Bayesian filtering --- that works for \emph{any} probability distribution, not only Gaussians.
+
+\subsection{Recursive Bayesian Filtering}
+Let $\mathrm{bel}(x(k))=P(x(k)\mid u(0{:}k{-}1),y(1{:}k))$ denote the \keyterm{belief}: the posterior probability of every state $x(k)$, given every movement and measurement seen so far. $\overline{\mathrm{bel}}(x(k))$ is the \keyterm{predicted belief} --- the same idea, but only propagated through the motion model, \emph{before} folding in $y(k)$.
+
+\begin{notebox}
+Two assumptions make this \emph{recursion} possible --- i.e.\  \keyterm{Markov assumption}: $x(k)$ depends only on $x(k{-}1)$ and $u(k{-}1)$, not on any earlier state; \keyterm{Measurement independence} --- $y(k)$ depends only on the current $x(k)$, not on past states or measurements.
+\end{notebox}
+
+\bookfig{figures/fig_bayes_localization.png}{Global localization in a hallway with 3 doors: the belief starts uniform; sensing a door splits it into 3 equally-likely peaks; moving right predicts-forward and flattens each peak slightly; sensing a second door reinforces only the peak consistent with \emph{both} sightings, leaving the robot confident of its true location --- prediction spreads the belief out, update sharpens it (cf.\ book Fig.\ 9.1).}{0.85}
+
+\begin{defbox}{Bayes Filter}
+\textbf{Prediction:}
+\[
+\overline{\mathrm{bel}}(x(k))=\sum_{x(k-1)} P(x(k)\mid u(k{-}1),x(k{-}1))
+\]
+\[
+{}\times\,\mathrm{bel}(x(k-1))
+\]
+\textbf{Update:}
+\[
+\mathrm{bel}(x(k))=\eta\, P(y(k)\mid x(k))\,\overline{\mathrm{bel}}(x(k))
+\]
+\end{defbox}
+\begin{itemize}
+\item $P(x(k)\mid u(k{-}1),x(k{-}1))$: \keyterm{motion model} --- probability of landing in state $x(k)$, given the previous state and the command that was issued.
+\item $P(y(k)\mid x(k))$: \keyterm{sensor model} --- how likely the actual reading $y(k)$ is, \emph{if} the robot were really at $x(k)$.
+\item $\eta$: normalizer so $\mathrm{bel}(x(k))$ sums to $1$; concretely $\eta=1\big/\sum_{x(k)}P(y(k)\mid x(k))\,\overline{\mathrm{bel}}(x(k))$.
+\end{itemize}
+\begin{notebox}
+\keyterm{Computing $P(y(k)\mid x(k))$ in practice}: simulate the reading the robot would \emph{expect} if it were really at candidate state $x(k)$, using the known map, then score how well the actual reading matches that expectation under an assumed noise model.
+
+\keyterm{Extracting a point estimate}: once $\mathrm{bel}(x(k))$ is computed, two standard choices reduce it to a single answer: \keyterm{MAP} (maximum a posteriori) takes $\arg\max_{x}\mathrm{bel}(x)$; $/;$ \keyterm{MMSE} takes the mean $\mathbb E[x]$, minimizing expected squared error.
+\end{notebox}
+
+\keyterm{Worked example:} a robot in a circular 3-cell hallway; cell $2$ has a door. 
+
+\textit{Motion model}: a "move right" command succeeds with probability $0.8$, the robot stays put with probability $0.2$. 
+
+\textit{Sensor model}: $P(\text{door}\mid x{=}2)=0.8$, $P(\text{door}\mid x{\ne}2)=0.2$.
+
+Start from $\mathrm{bel}(x(k{-}1))=[0.5,\,0.3,\,0.2]$ and issue "move right."
+
+\textbf{Prediction}:
+\[
+\overline{\mathrm{bel}}(1)=0.2(0.5)+0.8(0.2)=0.26
+\]
+\[
+\overline{\mathrm{bel}}(2)=0.8(0.5)+0.2(0.3)=0.46
+\]
+\[
+\overline{\mathrm{bel}}(3)=0.8(0.3)+0.2(0.2)=0.28
+\]
+\textbf{Update} (sensor reads "door"): 
+
+$P(\text{door}\mid x{=}i)\,\overline{\mathrm{bel}}(i)$:
+\[
+0.2(0.26)=0.052
+\]
+\[
+0.8(0.46)=0.368
+\]
+\[
+0.2(0.28)=0.056
+\]
+Normalize so the weighted values sum to $1$:
+\[
+\eta^{-1}=0.052+0.368+0.056=0.476
+\]
+\[
+\mathrm{bel}(x(k))= [0.109,\ 0.773,\ 0.118]
+\]
+Prediction alone already favored cell $2$ slightly, since moving right from a prior centered on cell $1$ lands there most often; sensing a door then collapses most of the remaining mass onto it.
+
+\subsection{Representing the Belief}
+\begin{center}\small
+\begin{tabular}{@{}p{2.1cm}p{2.3cm}p{1.7cm}@{}}
+\toprule
+Repr.\ & Scales w/\ dim.\ & Multimodal \\
+\midrule
+Kalman/EKF & best (closed form) & no \\
+Histogram/grid & worst (exponential) & yes \\
+Particle filter & good (graceful) & yes \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\keyterm{Histogram/grid}: discretize the state space into cells, store $P$ per cell. Prediction convolves the grid with the motion-model's uncertainty kernel; update multiplies each cell by the sensor likelihood, then renormalizes. 
+
+Easy to extract the mean or mode, and gives a well-understood approximation of the true posterior but the cell count grows exponentially with state dimension.
+
+\bookfig{figures/fig_grid_localization.png}{Global localization with a grid: the belief (dark = likely) starts smeared at (A), narrows at (B), and pins down a unique peak at (C) (cf.\ book Fig.\ 9.4) .}{0.95}
+
+\keyterm{Particle filter}: represent the belief as a weighted set of $N$ samples $(x,\omega)$. 
+
+Prediction samples each particle forward through the motion model. 
+
+Update reweights each particle by the sensor likelihood $P(y\mid x)$, then \keyterm{resamples} --- drawing $N$ new particles with replacement, probability proportional to weight, a "survival of the fittest" step that concentrates particles where the posterior is largest.
+
+\bookfig{figures/fig_particle_filter.png}{Global localization with a particle filter (10{,}000 samples): particles start spread uniformly over free space (left), thin out and cluster after fusing 10 sensor readings (middle), and collapse onto the true pose after 65 steps (right) --- resampling is what drives this convergence (cf.\ book Fig.\ 9.7).}{0.95}
+\begin{notebox}
+\keyterm{Systematic (low-variance) resampling}: rather than drawing $N$ independent samples from the weight distribution (\keyterm{roulette-wheel} sampling, which has higher variance), lay the $N$ weights end-to-end on $[0,1)$, pick one random offset $r\in[0,\,1/N)$, then take the particle under each of $r,\ r{+}1/N,\ r{+}2/N,\dots$ --- a single sweep, $O(N)$ time, lower variance than $N$ independent draws.
+
+\keyterm{Monte Carlo Localization (MCL)}: the particle filter above, named for its most common use --- robot localization. Per step: (1) sample each particle forward through the motion model given the executed control; (2) weight it by the sensor likelihood of the actual reading at that pose; (3) resample $N$ particles proportional to weight. Exactly the recipe above, applied to localization specifically.
+\end{notebox}
+\begin{notebox}
+\keyterm{When to prefer each}: Kalman/EKF when the belief stays comfortably unimodal and the state is high-dimensional --- it is by far the cheapest. A histogram/grid when the state space is low-dimensional (2--3D pose) and a full, high-accuracy posterior is needed, e.g.\ global localization from scratch. A particle filter when the belief may be multimodal \emph{and} the space is too high-dimensional for a grid --- the general-purpose default for real-world global localization, at the cost of being a Monte Carlo approximation (too few particles risks losing the true hypothesis entirely).
+\end{notebox}
+
+\subsection{Mapping}
+\keyterm{Occupancy grid mapping}: \emph{given known robot poses}, estimate $P(\text{occupied})$ independently for every workspace cell via Bayesian updating from an inverse sensor model --- essentially many small, independent Bayes-filter updates running in parallel, one per cell.
+\begin{notebox}
+Mapping with known poses is comparatively easy. The hard problem is when the poses \emph{aren't} known: without a map the robot cannot localize, and without localizing it cannot build a map. This chicken-and-egg problem is \keyterm{SLAM}.
+\end{notebox}
+\keyterm{Bayesian SLAM} estimates the joint posterior over the \emph{entire} trajectory and the map at once, $P(x(1{:}k),m\mid u(0{:}k{-}1),y(1{:}k))$, via the same prediction/update recursion as \S10.1. Two broad families tackle it:
+\begin{itemize}
+\item \keyterm{EKF-SLAM} (\S9.4): a sound, closed-form joint Gaussian over pose and landmarks, but essentially landmark-based and unimodal.
+\item \keyterm{Global optimization / scan matching}: treat poses as random variables linked by constraints from overlapping measurements (a spring network to relax), or greedily align each new sensor scan to the map built so far (iterative closest point). This scales to dense, feature-rich maps without the $O(n_\ell^2)$ growth of EKF-SLAM, but batch optimization (e.g.\ EM) needs multiple passes over the whole data set, while pure greedy scan matching cannot revise a past pose once fixed --- so accumulated error can leave large loops unclosed and the map globally inconsistent.
+\end{itemize}
+\keyterm{Prefer EKF-SLAM} for a modest number of discrete, uniquely-identifiable landmarks where a compact Gaussian suffices. \keyterm{Prefer particle-filter or optimization-based Bayesian SLAM} for large, dense, feature-rich maps where landmarks aren't naturally discrete and the trajectory belief may be multimodal --- worth the extra computation for a representation that can close loops and stay globally consistent.
+
+\end{multicols}
+\end{document}

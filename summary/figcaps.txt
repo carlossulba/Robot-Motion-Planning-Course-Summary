@@ -1,0 +1,18 @@
+warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+Traceback (most recent call last):
+  File "<string>", line 9, in <module>
+    print(idx, '|', m.group(0).replace(chr(10),' '))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carlo\AppData\Local\Programs\Python\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u03b1' in position 26: character maps to <undefined>
+289 | Figure 8.2 The set  corresponds to the states consistent with the current output y(k + 1).
+294 | Figure 8.3 Correction determines the “closest” and “most likely” state on the set of states .
+298 | Figure 8.4 The sensor noise distribution is projected into the state space and is an extruded
+301 | Figure 8.5 The initial estimate ˆx(k | k) has an uncertainty P(k | k) which grows to P(k+1 | k)
+302 | Figure 8.6 Measurements and predictions are then merged. The PDF plotted with the dot-
+312 | Figure 8.9 Mass–spring–damper.
+326 | Figure 9.2 shows the structure of the grid for this kind of
+326 | Figure 9.2 Grid-based representation of the state space.
+332 | 

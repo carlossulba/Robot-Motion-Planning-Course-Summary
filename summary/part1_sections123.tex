@@ -1,0 +1,364 @@
+\section{Introduction}
+
+Motion planning asks how a robot can move from a start configuration to a goal configuration while avoiding obstacles, and this section lays the conceptual groundwork: define the planning problem, characterize a planner, and use metrics to compare planners.
+
+\subsection{The Planning Problem}
+
+\begin{defbox}{Piano Mover's Problem}
+Given a rigid body (e.g.\ a free-flying polyhedron) and a known set of stationary obstacles, find a collision-free path from $q_{start}$ to $q_{goal}$.
+\end{defbox}
+\begin{itemize}
+\item \keyterm{Sofa mover's problem}: piano mover's problem restricted to the plane (body + planar obstacles).
+\item \keyterm{Generalized mover's problem}: robot is a set of rigid bodies linked at joints (e.g.\ a robot arm).
+\end{itemize}
+
+Key idea: instead of tracking every point of the robot, track its \keyterm{configuration} $q$ --- the smallest set of real-valued parameters that fully fixes the position of every point of the robot --- and plan in the \keyterm{configuration space} (C-space) $Q$ (formalized in \S2).
+
+\begin{defbox}{Path}
+Continuous $c:[0,1]\to Q$ with $c(0)=q_{start}$, $c(1)=q_{goal}$, $c(s)\in Q_{free}\ \forall s\in[0,1]$. Purely geometric/kinematic, no notion of time.
+\end{defbox}
+\begin{defbox}{Trajectory}
+A path parametrized by time, $c:[0,T]\to Q$, with $c\in C^2$ (twice-differentiable, so velocity/acceleration exist). Possible constraints: smoothness, min.\ length, min.\ time. Finding one = \keyterm{trajectory}/\keyterm{motion planning}.
+\end{defbox}
+
+\subsection{Characterizing a Planner}
+
+Book table 1.1 (pp.\ 28--30) characterizes the motion planning problem along three independent axes:
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.15}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{2.1cm}p{3.0cm}p{2.6cm}@{}}
+\toprule
+\textbf{Task} & \textbf{Robot} & \textbf{Algorithm} \\
+\midrule
+\begin{itemize}[leftmargin=1em,itemsep=2pt,topsep=2pt]
+\item Navigate
+\item Cover
+\item Localize
+\item Map
+\end{itemize}
+&
+\begin{itemize}[leftmargin=1em,itemsep=2pt,topsep=2pt]
+\item DoF / C-space
+\item Kinematic vs.\ dynamic
+\item Omnidirectional vs.\ nonholonomic
+\end{itemize}
+&
+\begin{itemize}[leftmargin=1em,itemsep=2pt,topsep=2pt]
+\item Optimal?
+\item Complexity
+\item Completeness
+\item Online/offline
+\item Sensor-based?
+\end{itemize} \\ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Task.}
+\begin{itemize}
+\item \keyterm{Navigation}: collision-free motion between two configurations.
+\item \keyterm{Coverage}: pass a sensor/tool over every point of a region (demining, mowing, painting).
+\item \keyterm{Localization}: use a map + sensor data to find the current configuration.
+\item \keyterm{Mapping}: explore/sense an unknown environment.
+\end{itemize}
+
+\textbf{Robot.}
+\begin{itemize}
+\item \keyterm{DoF / C-space}: the dimension and shape of the robot's configuration space (formalized in \S2).
+\item \keyterm{Kinematic vs.\ dynamic}: robot modeled kinematically (velocities as controls) or dynamically (forces as controls).
+\item \keyterm{Omnidirectional vs.\ nonholonomic}: omnidirectional can move instantaneously in any C-space direction; nonholonomic is subject to a velocity constraint (e.g.\ a car cannot slide sideways).
+\end{itemize}
+
+\textbf{Algorithm.}
+\begin{itemize}
+\item \keyterm{Optimal?}: whether the planner returns the best solution (e.g.\ shortest path) or merely a valid one.
+\item \keyterm{Complexity}: the algorithm's running time and memory use as a function of problem size.
+\item \keyterm{Completeness}:
+  \begin{itemize}
+  \item \keyterm{Complete}: always finds a solution if one exists, else correctly reports failure, in finite time.
+  \item \keyterm{Resolution complete}: finds a solution if one exists \emph{at a given discretization resolution} (e.g.\ grid-based planners).
+  \item \keyterm{Probabilistically complete}: $P(\text{success})\to 1$ as time/\#samples $\to\infty$ (basis of PRM, RRT).
+  \end{itemize}
+\item \keyterm{Online/offline}: \keyterm{offline} builds the whole plan in advance from a known model, then hands it to an executor; \keyterm{online} builds the plan incrementally while executing.
+\item \keyterm{Sensor-based?}: online \emph{and} interleaves sensing, computation, action (every Bug algorithm, \S3).
+\end{itemize}
+
+\begin{notebox}
+Optimality, completeness and computational complexity trade off against each other --- demanding one typically costs in the others. Full completeness becomes intractable as DoF grows, motivating the two weaker notions above.
+\end{notebox}
+
+\subsection{Performance Metrics}
+
+\begin{itemize}
+\item Path length / execution time / energy consumption
+\item Planning (pre-processing) time
+\item Safety --- clearance/distance kept from obstacles
+\item Robustness to disturbances and sensing/actuation noise
+\item Probability of success (randomized planners)
+\item Memory requirements and asymptotic complexity in problem size (DoF, \#obstacles, \dots)
+\end{itemize}
+\begin{notebox}
+Expensive offline pre-processing (building a roadmap once) pays off when the environment is static and many queries follow --- cost amortizes. In high-dimensional or frequently-changing environments this trade flips, motivating sampling-based planners (\S8). When a planner cannot compute a full roadmap in advance (high-complexity manipulator), probabilistic/sampling approaches are used instead.
+\end{notebox}
+
+\subsection{Contents}
+The rest of this summary is organized as follows.
+\begin{itemize}
+\item \textbf{\S2 Configuration Space} introduces degrees of freedom, orientation parametrizations, free space and obstacles, C-space topology, and collision detection.
+\item \textbf{\S3 Bug Algorithms} covers sensor-based, map-free local navigation strategies (Bug0, Bug1, Bug2, Tangent Bug).
+\item \textbf{\S4 Potential Functions} builds a scalar field from an attractive goal and repulsive obstacles and follows its gradient downhill.
+\item \textbf{\S5 Grid-Based Planners} presents the Brushfire distance transform and the Wave-Front planner built on top of it.
+\item \textbf{\S6 Roadmaps} covers the visibility graph, GVD, and GVG/HGVG.
+\item \textbf{\S7 Cell Decompositions} covers trapezoidal and boustrophedon decomposition, Canny's roadmap algorithm, approximate (quadtree) decomposition, and online/sensor-based coverage.
+\item \textbf{\S8 Roadmapping with Random Sampling} covers probabilistically complete planners (PRM, RRT, RRT*, SRT) that scale to high-dimensional C-spaces.
+\item \textbf{\S9 Kalman Filter} estimates robot state from noisy sensors: probabilistic estimation, the linear and extended Kalman filter, and Kalman filter-based SLAM.
+\item \textbf{\S10 Bayesian Methods} generalizes state estimation to non-Gaussian beliefs via recursive Bayesian filtering, histogram and particle-filter representations, and Bayesian SLAM.
+\end{itemize}
+
+\section{Configuration Space}
+
+The configuration space (C-space) reframes the planning problem: instead of reasoning about a robot's full physical shape, it treats the robot as a single point moving through the space of all possible configurations.
+
+\subsection{Basics}
+
+\keyterm{Workspace} $W$: physical ambient space the robot moves through ($\mathbb{R}^2$ or $\mathbb{R}^3$); $W_{free}=W\setminus\bigcup_i WO_i$. For an arm, often taken as the reachable space of the end-effector.
+
+\keyterm{Task space}: whatever space the task is most naturally expressed in (e.g.\ end-effector position).
+
+\keyterm{Configuration} $q$: smallest set of real-valued coordinates fully describing the position of every point of the robot; $q=(\text{position},\text{orientation})=(x,y,z,\dots)$.
+
+\keyterm{Configuration space} (C-space) $Q$: space of all configurations the robot can achieve.
+
+\keyterm{Dimension of $Q$ / DoF}: minimum \# parameters needed to specify $q$.
+
+These three spaces coincide only for a point robot in the plane; e.g.\ a 2-link planar arm has a 2D \emph{task} workspace (an annulus) but its C-space is $Q=T^2$ (torus, not $\mathbb{R}^2$), because each joint angle wraps around ($S^1$, not $\mathbb{R}$). \\
+Common robot models: single points, single rigid bodies, multiple rigid bodies with joints.
+
+\bookfig{figures/ext_torus.png}{The C-space of a 2R planar arm is a torus $T^2=S^1\times S^1$: each joint angle ($\theta_1$, $\theta_2$) independently wraps around a circle, so the two angles together sweep out the surface of a donut, not a flat square (cf.\ book Fig.\ 3.10).}{0.4}
+
+\keyterm{Non-holonomic robot}: cannot move freely on the C-space manifold in every direction (constrained), e.g.\ a car.
+
+\subsection{Degrees of Freedom}
+
+This section covers how to determine a robot's degrees of freedom (DoF) --- the dimension of its C-space --- using a different counting approach for each kind of mechanism: open chains, single rigid bodies, and closed chains.
+
+\textbf{Open chains (serial mechanisms).} DoF $=$ sum of DoF of each joint: revolute (R) or prismatic (P) joint $=1$, spherical (ball-and-socket) joint $=3$. \\
+A 2R planar arm has 2 DoF, $Q=S^1\times S^1=T^2$.
+
+\textbf{Single rigid body --- points-and-constraints method.} Fix points on the body one at a time, counting remaining freedom after each rigidity (distance) constraint.
+\begin{itemize}
+\item \textbf{2D:} point $A$ free in plane (2 DoF); $B$ fixed-distance from $A$ $\Rightarrow$ confined to a circle (1 DoF, angle); any third point already pinned by distances to $A,B$. Total \textbf{3 DoF} (2 translational $+$ 1 rotational).
+\item \textbf{3D:} $A$ free in space (3 DoF); $B$ confined to a sphere about $A$ (2 DoF); $C$ constrained by distances to \emph{both} $A,B$ $\Rightarrow$ confined to a circle about axis $AB$ (1 DoF); every other point now fixed. Total \textbf{6 DoF} (3 translational $+$ 3 rotational).
+\end{itemize}
+Equivalently from the group structure: a rigid body in $n$-space has $n(n-1)/2+n=n(n+1)/2$ DoF overall, of which $n(n-1)/2$ are rotational. Matches: $n=2\Rightarrow 3$ DoF, $n=3\Rightarrow 6$ DoF.
+
+\begin{defbox}{Grübler's Formula (closed chains / parallel mechanisms)}
+For $k$ links (incl.\ 1 fixed ground link, so $k-1$ movable) and $n$ joints:
+\[
+M = N(k-1) - \sum_{i=1}^{n} (N-f_i) = N(k-n-1) + \sum_{i=1}^{n} f_i
+\]
+$N=6$ (spatial/3D) or $3$ (planar/2D); $f_i$ = DoF of joint $i$ (1 for R/P, 3 for spherical). Valid only if joint constraints are independent.
+\end{defbox}
+\textit{Worked example:} planar 6-link, 7-revolute-joint mechanism ($N=3,k=6,n=7,f_i=1\ \forall i$):
+
+$M=3(6-7-1)+7\cdot1=3(-2)+7=\mathbf{1}$ DoF
+
+--- despite 6 links and 7 joints looking heavily constrained.
+
+\subsection{Parametrizations of Orientation}
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{@{}p{2.2cm}p{2.55cm}p{2.55cm}@{}}
+\toprule
+Representation (\#nums) & Advantage & Drawback \\
+\midrule
+Rotation matrix $R\in SO(3)$ (9) &
+Composes by matrix mult.\newline embeds into $SE(3)$\newline no singularities &
+Over-parametrized: 9 numbers, 6 constraints ($R^TR=I$) \\[14pt]
+Euler angles $(\alpha,\beta,\gamma)$ (3) &
+Minimal: exactly \#DoF\newline intuitive (roll/pitch/yaw) &
+Gimbal lock (singularities)\newline many incompatible conventions\newline hard to concatenate \\[14pt]
+Unit quaternion $u\in S^3$ (4) &
+Compact, no singularities, cheap compose/inverse &
+Over-param.\ by 1 ($\|u\|=1$)\newline double-covers $SO(3)$ ($u,-u$ same rotation) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+$R\in SO(3)$: $R^TR=I$, $\det(R)=1$; columns of $R$ are the new coordinate axes expressed in the stationary frame.
+
+Euler (Z-Y-Z or roll-pitch-yaw) construction: $R_{xyz}(\alpha,\beta,\gamma)=R_z(\gamma)R_y(\beta)R_x(\alpha)$ (elementary rotations multiplied, applied right-to-left).
+
+Quaternion (axis $n$, $\|n\|=1$, angle $\theta$):
+\[
+u=\left(\cos\tfrac{\theta}{2},\ n_x\sin\tfrac{\theta}{2},\ n_y\sin\tfrac{\theta}{2},\ n_z\sin\tfrac{\theta}{2}\right)
+\]
+
+\bookfig{figures/ext_axis-angle-representation.png}{Axis-angle representation: a rotation by angle $\theta$ about a unit axis $n$, the geometric picture behind the quaternion formula above (cf.\ book Fig.\ E.2).}{0.4}
+
+\begin{democallout}
+\demo{https://eater.net/quaternions}
+\end{democallout}
+
+\begin{notebox}
+Half-angle $\theta/2$ is what makes quaternion multiplication compose rotations correctly; it is also why a full $360^\circ$ loop in $SO(3)$ is only a half-loop in $S^3$, giving the $u=-u$ double cover.
+\end{notebox}
+
+\subsection{Free Space and Obstacles}
+
+Obstacles in the workspace induce forbidden regions in C-space; this section defines those regions and describes how to compute them in practice.
+
+$Q=F\cup Q_{obs}$. For workspace obstacle $WO_i$, the induced \keyterm{C-space obstacle} is
+\[
+Q_{O_i}=\{q\in Q \mid R(q)\cap WO_i\neq\emptyset\}
+\]
+where $R(q)$ = set of points occupied by the robot at $q$.
+
+\keyterm{Free space}: $F=Q_{free}=Q\setminus\bigcup_i Q_{O_i}$ (open subset of $Q$).
+
+\keyterm{Obstacle space} $Q_{obs}$: closed subset (contains its boundary).
+
+\keyterm{Semi-free configuration}: robot touches an obstacle's boundary but not its interior, i.e.\ $q\in \mathrm{cl}(F)\setminus F$. A \emph{free} path never touches an obstacle ($c:[0,1]\to F$); a \emph{semi-free} path may graze one ($c:[0,1]\to \mathrm{cl}(F)$).
+\\
+\begin{notebox}
+\keyterm{Determine free space by discretization} (brute force): lay a grid on $Q$; for each grid point, place the robot at that exact configuration and run a direct collision test against workspace obstacles, coloring the cell free/occupied. Works for arbitrary robot shapes/DoF, but only \emph{resolution complete} --- a path through a gap between grid samples can be missed.
+\end{notebox}
+
+\subsection{Topology of Configuration Space}
+
+The shape of a C-space, not just its dimension, determines how a planner may reason about it; this section introduces topological vocabulary to describe its shape.
+
+\begin{defbox}{Homeomorphism}
+Bijection $\varphi:S\to T$ with $\varphi,\varphi^{-1}$ both continuous. $S,T$ then topologically the same (deformable into each other without cutting/gluing).
+\end{defbox}
+\begin{defbox}{Diffeomorphism}
+Smooth bijection $\varphi$ with smooth $\varphi^{-1}$. Strictly stronger (smoothness $\Rightarrow$ continuity, not conversely) $\Rightarrow$ every diffeomorphism is a homeomorphism, not vice versa. Circle $\leftrightarrow$ ellipse: diffeomorphic. Circle $\leftrightarrow$ ``racetrack'' (two straight sides + semicircular caps): only homeomorphic --- curvature is discontinuous at the 4 joints.
+\end{defbox}
+\begin{defbox}{Manifold}
+$S$ is a $k$-dimensional manifold if \emph{locally} homeomorphic to $\mathbb{R}^k$: every point has a neighborhood topologically like an open patch of $\mathbb{R}^k$ (even if globally curved, e.g.\ Earth's surface looks locally flat).
+\end{defbox}
+\keyterm{Chart}: pair $(U,\varphi)$, $U$ open in the manifold, $\varphi$ a diffeomorphism from $U$ onto an open subset of $\mathbb{R}^k$ (a local coordinate system). A single chart usually cannot cover a whole manifold (no single chart covers all of $S^1$).
+
+\keyterm{Atlas}: collection of charts, compatible (``$C$-related'') on overlaps, whose domains together cover $Q$; atlas $+$ $Q$ = differentiable manifold.
+
+\keyterm{Submanifold}: smooth subset inheriting the ambient space's differentiability, e.g.\ $S^1\subset\mathbb{R}^2$, $T^2\subset\mathbb{R}^3$ (a torus \emph{cannot} be embedded in $\mathbb{R}^2$, hence always drawn as a doughnut in 3D).
+
+\subsection{Point Representation}
+
+To simplify collision checking, reduce the robot to a \keyterm{point} and push its physical bulk onto the obstacles --- \keyterm{Minkowski sum}:
+
+For a circular robot of radius $r$: obstacle boundary offset outward by $r$, corners rounded into arcs of radius $r$.
+
+\bookfig{figures/ext_pointrep.png}{Point representation via Minkowski sum: the robot's bulk is absorbed into an enlarged obstacle, so the robot can now be treated as a single point (cf.\ book Fig.\ 3.5).}{0.5}
+
+Exact Minkowski-sum construction stays cheap only for simple shapes at fixed orientation; a rotating robot needs recomputation per orientation, which is why the discretized grid approach (\S2.4) is often used instead.
+
+\subsection{Collision Detection}
+
+Wrap the robot in a cheap \keyterm{bounding volume}, test that first, fall back to exact geometry only if ambiguous.
+\begin{itemize}
+\item \keyterm{Circle}: 1 distance calculation (center-to-center vs.\ sum of radii); loose for elongated/concave (e.g.\ L-shaped) robots.
+\item \keyterm{Axis-aligned rectangle}: up to 4 comparisons; tight only when aligned with robot axes; must be rebuilt on rotation.
+\item \keyterm{Hierarchical circle-splitting}: start with one enclosing circle, test. If possible collision, split into smaller child circles covering the robot's parts, recurse (test, split further where ambiguous) down to a minimum radius. --- Cheap, refines automatically near actual contact. Best default for irregular shapes.
+\end{itemize}
+
+\bookfig{figures/ext_collision_hull.png}{Different hulls require different number of tests (cf.\ Slides 1.22)}{0.85}
+
+\section{Bug Algorithms}
+
+The Bug family performs sensor-based, purely local navigation with no map and no pre-processing. Every variant assumes a point robot in the plane with perfect localization (it always knows its own position and the direction and distance to $q_{goal}$), zero prior knowledge of the obstacles, and either a contact sensor (Bug1/Bug2) or a finite-range radial sensor (Tangent Bug). Each alternates between two behaviors: \keyterm{motion-to-goal}, a straight line toward $q_{goal}$, and \keyterm{boundary-following}, tracing an obstacle's boundary. The \keyterm{m-line} is the segment from the most recent leave point (or $q_{start}$, initially) to $q_{goal}$.
+
+\subsection{Bug0}
+\begin{notebox}
+Not in the book.
+\end{notebox}
+\textbf{Strategy: naive.}
+\begin{enumerate}
+\item Head towards the goal.
+\item When hit point reached, follow the boundary until the direct line to goal is locally unobstructed.
+\item Continue from 1.
+\end{enumerate}
+
+\bookfig{figures/ext_bug0.png}{Bug0 example (cf.\ Slides 2.5)}{0.65}
+
+No termination guarantee: leaves at the \emph{first} opening $\Rightarrow$ can loop forever (spirals, or two obstacles re-triggering each other) (cf.\ Slides 2.6).
+
+\subsection{Bug1}
+\textbf{Strategy: exhaustive.}
+\begin{enumerate}
+\item Move toward $q_{goal}$ on the m-line.
+\item At hit point $q_i^H$: circumnavigate the \emph{entire} boundary, tracking distance-to-goal throughout.
+\item Return to leave point $q_i^L$ = boundary point closest to the goal (shorter retrace direction).
+\item Resume motion-to-goal from $q_i^L$.
+\item If the line $q_i^L\to q_{goal}$ re-intersects the same obstacle: no path exists.
+\end{enumerate}
+\textbf{Worst case:} $\displaystyle L_{\alg{Bug1}} \le d(q_{start},q_{goal}) + 1.5\sum_i p_i$, $\; p_i$ = perimeter of $i$-th obstacle.
+
+\textbf{Fails:} if $q_{start}$ starts inside a closed obstacle;
+
+\textbf{Drawback:} leave-vector can change the approach direction to the goal (problematic when grasping objects).
+
+\subsection{Bug2}
+\textbf{Strategy: greedy.} m-line is \emph{fixed} for the whole run (not recomputed per obstacle).
+\begin{enumerate}
+\item Move toward $q_{goal}$ on the fixed m-line.
+\item At hit point $q_i^H$: follow the boundary.
+\item Leave at a boundary point on the m-line that is closer to the goal than $q_i^H$. New leave point: $q_i^L$.
+\item Resume motion-to-goal from $q_i^L$.
+\item If the robot re-encounters $q_i^H$: no path exists.
+\end{enumerate}
+\textbf{Worst case:} $\displaystyle L_{\alg{Bug2}} \le d(q_{start},q_{goal}) + 0.5\sum_i n_i p_i$, $\; n_i$ = \# times the m-line crosses obstacle $i$.
+
+\textbf{Fails:} if $q_{start}$ inside a closed obstacle; also on spiral-shaped obstacles.
+\begin{notebox}
+Neither dominates: Bug2 wins on simple/convex-ish obstacles (small $n_i$, no cost for a full lap). Bug1 wins as obstacle complexity ($n_i$, m-line crossings) grows, since its bound does not depend on $n_i$ at all --- it always finds the globally best leave point on the boundary.
+\end{notebox}
+
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#bug-algorithms}
+\end{democallout}
+
+\subsection{Tangent Bug}
+
+Tangent Bug extends the Bug idea with a finite-range sensor instead of contact-only sensing. Like Bug1/Bug2 it still alternates between the same two phases, motion-to-goal and boundary-following, but now a look-ahead heuristic, computed purely from whatever the sensor currently sees, decides both phases: while heading for the goal it picks the most promising sensed direction, and while following a boundary it continuously compares what has been seen so far against what is reachable right now to decide the exact instant to switch back to motion-to-goal --- rather than committing to a full lap (Bug1) or waiting for a fixed geometric condition on the m-line (Bug2).
+
+Robot has a finite-range ($R$) radial distance sensor, $360^\circ$. Heuristic distance to a sensed point $p$: $h(p)=d(x,p)+d(p,q_{goal})$.
+\textbf{Motion-to-goal:} move toward the sensed boundary/discontinuity point minimizing $h(p)$, until $h$ stops decreasing (local minimum).
+
+\bookfig{figures/fig_tangentbug_sensing.png}{The dotted circle is the robot's sensing range; $O_i$ are points of discontinuity in what the sensor can see. As the robot moves it re-evaluates which direction currently minimizes $h(p)$. (cf.\ book Fig.\ 2.7)}{0.75}
+
+\textbf{Boundary-following:} continuously track
+\begin{itemize}
+\item $d_{followed}$: shortest distance-to-goal among boundary points sensed so far on the followed obstacle;
+\item $d_{reach}$: best distance-to-goal achievable right now from a point currently within line-of-sight.
+\end{itemize}
+\textbf{Leave condition:} as soon as $d_{reach} < d_{followed}$, leave the boundary and resume motion-to-goal.
+
+\bookfig{figures/fig_tangentbug_localmin.png}{$M$ is where motion-to-goal first gets deflected by the obstacle (a local minimum of the heuristic). The dashed/dotted arc is boundary-following, continuously comparing $d_{followed}$ against $d_{reach}$ (cf.\ book Fig.\ 2.10).}{0.65}
+
+\begin{notebox}
+$R\to 0$ (contact-only): the leave condition $d_{reach}<d_{followed}$ collapses to "leave as soon as the current contact point beats every boundary point seen so far" --- a purely local record-beating test with no reference to any fixed line, exactly Bug0's rule, not Bug2's (which requires the leave point to lie on the fixed m-line). So Tangent Bug degenerates to \keyterm{Bug0}, inheriting its lack of a completeness guarantee. $R\to\infty$: can see past an entire obstacle silhouette to a much better route than boundary-following would ever find.
+\end{notebox}
+\begin{democallout}
+\demo{https://carlossulba.github.io/Robot-Motion-Planning-Course-Summary/index.html\#bug-algorithms}
+\end{democallout}
+
+\subsection{Comparing the Family}
+
+\begin{center}\small
+\begin{tabular}{@{}p{1.9cm}p{1.6cm}p{1.8cm}p{1.6cm}@{}}
+\toprule
+Alg. & Sensor & Search strategy & Path quality \\
+\midrule
+\alg{Bug0} & contact & naive & no guarantee, may loop \\
+\alg{Bug1} & contact & exhaustive & predictable, often longer \\
+\alg{Bug2} & contact & greedy & often shorter, less predictable \\
+\alg{Tangent\-Bug} & finite-range radial & greedy + look-ahead & usually best \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Sensor range effect:} larger range $\Rightarrow$ can see more of an obstacle's silhouette before committing to boundary-following, giving shorter paths; contact-only sensing forces physical contact before any reaction is possible.
